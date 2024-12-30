@@ -62,6 +62,7 @@ class StreamSegment:
         input_file.close()
         # Report.
         print(f"\nInput file name:  {self.name}")
+        print(f"  Type:             {self.file_type}")
         print(f"  Segment:          {self.key}")
         print(f"  Documents:        {self.documents}")
         print(f"  Pages:            {self.pages}")

@@ -1,31 +1,64 @@
-""" stream:  Printstream/Document Utilities: Compose, Analyze, Enhance, Transform """
+""" stream:  Printstream/Document Processing: Compose, Analyze, Enhance, Transform """
 
 import sys
 import argparse
+from xml.dom import minidom
 
 from stream_parser import StreamParser
 
 
-# Process command-line arguments.
-parser = argparse.ArgumentParser(description="Printstream Utilities.")
-parser.add_argument("input_files", metavar="input_filenames", type=str,
-                    nargs="+", help="input printstream filename(s)")
-parser.add_argument("-t", "--type", dest="type", default=None,
-                    help="printstream type/language")
-args = parser.parse_args()
+def analyze(step):
+    """ Analyze process.
 
-# Set up for processing.
-stream_parser = StreamParser()
+    :param step: Process step
+    """
+    # Set up for processing.
+    stream_parser = StreamParser()
+    # Add the input file(s) to the parser as files.
+    for file in step.getElementsByTagName("file"):
+        if file.getAttribute("type") == "input":
+            name = file.getAttribute('name')
+            try:
+                file_type = file.getAttribute('type')
+            except:
+                file_type = None
+            print(f"processing input file:  {name}")
+            stream_parser.add_file(stream_parser, name, file_type=file_type)
+    # Parse printstream files.
+    stream_parser.parse()
 
-# Add the input file(s) to the parser as segments.
-for input_name in args.input_files:
 
-    # Process an input file.
-    print(f" processing input file:  {input_name}")
-    stream_parser.add_file(stream_parser, input_name, file_type=args.type)
+if __name__ == "__main__":
 
-# Parse printstream segments.
-stream_parser.parse()
+    # Process command-line arguments.
+    arg_parser = argparse.ArgumentParser(description="Printstream Utilities.")
+    arg_parser.add_argument("process", type=str, default=None, help="Process file name (xml)")
+    arg_parser.add_argument("--start", type=str, default=None, help="First step of the process file to execute. Defaults to first step.")
+    arg_parser.add_argument("--stop", type=str, default=None, help="Last step of the process file to execute. Defaults to last step")
+    args = arg_parser.parse_args()
 
-#  End script.
-sys.exit(0)
+    # Execute the process steps.
+    document = minidom.parse(args.process)
+    process = document.documentElement
+    process_steps = process.getElementsByTagName("step")
+    if args.start is None:
+        started = True
+    else:
+        started = False
+    stopping = False
+    stopped = False
+    for process_step in process_steps:
+        step_name = process_step.getAttribute("name")
+        if stopping:
+            stopped = True
+        if (not started) and (step_name == args.start):
+            started = True
+        if (not stopped) and (step_name == args.stop):
+            stopping = True
+        if started and not stopped:
+            print(f"Processing step:  {step_name}")
+            if step_name == "analyze":
+                analyze(process_step)
+
+    #  End script.
+    sys.exit(0)

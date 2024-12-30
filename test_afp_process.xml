@@ -1,0 +1,14 @@
+<process>
+    <step name="analyze">
+        <file name="test_afp.afp" file_type="afp" type="input"/>
+    </step>
+    <step name="extract">
+        <file name="test_afp.afp" file_type="afp" type="input"/>
+    </step>
+    <step name="merge">
+        <file name="test_afp.afp" file_type="afp" type="input"/>
+    </step>
+    <step name="transform">
+        <file name="test_afp.afp" file_type="afp" type="input"/>
+    </step>
+</process>
