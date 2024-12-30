@@ -1,4 +1,4 @@
-""" StreamFunction class manages parsing functions in printstream records. """
+""" Parse a printstream record function. """
 
 
 class StreamFunction:
@@ -6,8 +6,8 @@ class StreamFunction:
     
     def __init__(self):
         self.length = 0
-        self.data = ''
-        self.type = ''
+        self.data = ""
+        self.type = ""
         
     def parse(self):
         pass
