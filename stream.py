@@ -18,9 +18,9 @@ def analyze(step):
     for file in step.getElementsByTagName("file"):
         if file.getAttribute("type") == "input":
             name = file.getAttribute('name')
-            try:
-                file_type = file.getAttribute('type')
-            except:
+            if file.hasAttribute('file_type'):
+                file_type = file.getAttribute('file_type')
+            else:
                 file_type = None
             print(f"processing input file:  {name}")
             stream_parser.add_file(stream_parser, name, file_type=file_type)

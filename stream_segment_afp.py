@@ -4,11 +4,11 @@ import os
 import sys
 import struct
 
-from stream_record import StreamRecord
+from stream_record_afp import StreamRecordAFP
 import stream_afp
 
 
-class StreamSegment:
+class StreamSegmentAFP:
     """ Manage the detail parsing of a segment of a printstream segment. """
     
     def __init__(self, file, key, start_offset=None, end_offset=None):
@@ -50,7 +50,7 @@ class StreamSegment:
                 # s.decode("EBCDIC-CP-BE").encode("ascii")
                 print("record #%d (%s->%s):  %i bytes" % (rec_count, rec_type_cur["type"], rec_type_cur["code"], rec_len))
                 cur_offset = input_file.tell()
-                cur_rec = StreamRecord(self)
+                cur_rec = StreamRecordAFP(self)
                 cur_rec.data = rec_data
                 cur_rec.length = rec_len
                 cur_rec.type = rec_type_cur["type"]
@@ -58,6 +58,10 @@ class StreamSegment:
                 self.records += 1
             else:
                 break
+        # Roll up counts to the file level.
+        self.file.documents += self.documents
+        self.file.pages += self.pages
+        self.file.records += self.records
         # Close files.
         input_file.close()
         # Report.

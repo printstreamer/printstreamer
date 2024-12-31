@@ -1,7 +1,7 @@
 """ Parse a printstream record function. """
 
 
-class StreamFunction:
+class StreamFunctionAFP:
     """ Manages the detail parsing of printstream functions and parameters. """
     
     def __init__(self):
