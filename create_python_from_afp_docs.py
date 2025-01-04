@@ -1,4 +1,3 @@
-import os
 import re
 import sys
 
@@ -7,9 +6,9 @@ import sys
 types = []
 fields = []
 #open input file
-output_path = "C:\\Users\\print\\Documents\\stream\\afp_recs"
-input=open('modca_rec_structure_print.txt','r')
-output=open('modca_rec_structure_c.txt','w')
+output_path = "C:\\Users\\print\\Documents\\stream\\printstreamer"
+input = open("C:\\Users\\print\\Documents\\stream\\modca_rec_structure_print.txt", "r")
+output = open("C:\\Users\\print\\Documents\\stream\\printstreamer\\modca_rec_structure_c.txt", "w")
 rec_types = 0
 rec_type = ""
 class_def = False
@@ -34,15 +33,15 @@ for line in input:
                 fields.append(field)
                 field_def = False
                 if rec_type == "IOB":
-                    print field
-                    print "end field"
+                    print(field)
+                    print("end field")
 
         # End class section:
         #
         if (len(line) == 0):
             class_def = False
             if rec_type == "IOB":
-                print "end class"
+                print("end class")
         
         # Start record type:
         # BAG (X'D3A8C9') Syntax
@@ -60,7 +59,7 @@ for line in input:
             rec_type = m.group(1)
             type = {}
             type['type'] = rec_type
-            print rec_type
+            print(rec_type)
 
         # Start field definition:
         if class_def:
@@ -69,7 +68,7 @@ for line in input:
                 offset_string = line[offset_loc:type_loc].strip()
                 if offset_string != "":
                     if rec_type == "IOB":
-                        print "offset_string=(%s)" % offset_string
+                        print("offset_string=(%s)" % offset_string)
                     # Init values.
                     field = {}
                     field['offset'] = ""
@@ -87,7 +86,7 @@ for line in input:
                     if m:
                         field_def = True
                         if rec_type == "IOB":
-                            print "field begin"
+                            print("field begin")
                         field['offset'] = int(m.group(1))
                         if (m.group(2) is None) or (m.group(2) == ""):
                             field['end'] = field['offset']
@@ -111,7 +110,7 @@ for line in input:
                         field['optional'] = "y"
                     field['exception'] += line[exception_loc:].strip()
                 if rec_type == "IOB":
-                    print field
+                    print(field)
 
         # Start class section:
         #     Offset            Type       Name                Range              Meaning
@@ -126,8 +125,8 @@ for line in input:
             meaning_loc = line.index("Meaning")
             optional_loc = line.index("M/O")
             exception_loc = line.index("Exc")
-            print "offset_loc=%i" % offset_loc
-            print "type_loc=%i" % type_loc
+            print("offset_loc=%i" % offset_loc)
+            print("type_loc=%i" % type_loc)
 
 # Save last class.
 if rec_types > 0:
@@ -205,18 +204,18 @@ public:
         #elif field['type'] == "UBIN":
         #    data = "    char %s[%i];" % (field['name'], field['length'])
         #else:
-        #    print "Error:  Unknown field type ->(%s)" % field['type']
+        #    print("Error:  Unknown field type ->(%s)" % field['type']
         #    sys.exit(1)
-        range = field['range'].split("\t")
+        range_value = field['range'].split("\t")
         meaning = field['meaning'].split("\t")
         data = "%-30.30s  // %5i   %5i  %-4.4s  %-1.1s         %-5.5s      %-20.20s  %s\n" % (data, field['offset'], field['length'], field['type'], field['optional'], field['exception'], range[0], meaning[0])
         hdrfile.write(data)
         line_count = len(meaning)
-        if len(range) > line_count:
-            line_count = len(range)
+        if len(range_value) > line_count:
+            line_count = len(range_value)
         if line_count > 1:
-            for line in xrange(1, line_count - 1):
-                data = "%-30.30s  // %5.5s   %5.5s  %-4.4s  %-1.1s         %-5.5s      %-20.20s  %s\n" % ("", "", "", "", "", "", range[line], meaning[line])
+            for line in range(1, line_count - 1):
+                data = "%-30.30s  // %5.5s   %5.5s  %-4.4s  %-1.1s         %-5.5s      %-20.20s  %s\n" % ("", "", "", "", "", "", range_value[line], meaning[line])
                 hdrfile.write(data)
 
     # Write footer.
