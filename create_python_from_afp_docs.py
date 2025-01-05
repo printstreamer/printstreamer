@@ -171,7 +171,8 @@ class AFP_%s:
 
     # Write detail.
     reserved_count = 0
-    parameter_list = ""
+    pack_parameter_list = ""
+    unpack_parameter_list = ""
     format_string = ""
     for field in fields_sorted:
         if field['type'] == "":
@@ -183,24 +184,41 @@ class AFP_%s:
         else:
             name = field['name']
         name_formatted = f"self.{name} = None"
-        if len(parameter_list) > 0:
-            parameter_list += ", "
-        parameter_list += f"self.{name}"
-        if field["type"] in ["CHAR", "CODE", "", None]:
+        if len(pack_parameter_list) > 0:
+            pack_parameter_list += ", "
+        pack_parameter_list += f"self.{name}"
+        if len(unpack_parameter_list) > 0:
+            unpack_parameter_list += ", "
+        unpack_parameter_list += f"self.{name}"
+        if field["type"] in ["CHAR", "CODE", "UNDF", "BITS", "", None]:
             field_format = f'{field["length"]}s'
-        elif field["type"] in ["SBIN"]:
+        elif field["type"] == "SBIN":
             if field["length"] == 1:
                 field_format = f'b'
             elif field["length"] == 2:
                 field_format = f'h'
-            elif field["length"] == 4:
-                field_format = f'i'
+            elif field["length"] == 3:
+                field_format = f'xh'
             else:
-                msg = f'Unknown SBIN field length:  {field["length"]}\n{line}'
+                field_format = f''
+                msg = f'Unknown SBIN field length:  {field["length"]}\n{field}'
+                print(msg)
+                # raise Exception(msg)
+        elif field["type"] == "UBIN":
+            if field["length"] == 1:
+                field_format = f'B'
+            elif field["length"] == 2:
+                field_format = f'H'
+            elif field["length"] == 3:
+                field_format = f'xH'
+            else:
+                field_format = f''
+                msg = f'Unknown UBIN field length:  {field["length"]}\n{field}'
                 print(msg)
                 # raise Exception(msg)
         else:
-            msg = f'Unknown field format:  {field["type"]}\n{line}'
+            field_format = f''
+            msg = f'Unknown field format:  {field["type"]}\n{field}'
             print(msg)
             # raise Exception(msg)
         format_string += field_format
@@ -252,7 +270,7 @@ class AFP_%s:
     def format(self):
         data = pack(">%s", %s)
         return data
-''' % (parameter_list, format_string, format_string, parameter_list)
+''' % (unpack_parameter_list, format_string, format_string, pack_parameter_list)
     classfile.write(data)
 
     # Close output file.
