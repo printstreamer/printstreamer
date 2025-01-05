@@ -1,34 +1,38 @@
+""" Create python structures and code from a text version of the AFP documentation.
+
+"""
+
+import os
 import re
 import sys
 
 
-#setup
+# Setup.
 types = []
 fields = []
-#open input file
-output_path = "C:\\Users\\print\\Documents\\stream\\printstreamer"
+
+# Open files.
+output_path = "C:\\Users\\print\\Documents\\stream\\printstreamer\\afp"
 input = open("C:\\Users\\print\\Documents\\stream\\modca_rec_structure_print.txt", "r")
-output = open("C:\\Users\\print\\Documents\\stream\\printstreamer\\modca_rec_structure_c.txt", "w")
+output = open("C:\\Users\\print\\Documents\\stream\\printstreamer\\modca_rec_structure.txt", "w")
 rec_types = 0
 rec_type = ""
 class_def = False
 field_def = False
-#process input file
+
+# Process input file.
 for line in input:
     # Fix bad character.
     line = line.replace("\xad", "-").rstrip()
-    #if rec_type == "IOB":
-    #    print line
+    # if rec_type == "IOB":
+    #    print(line)
 
     # Skip the line.
     if ("Note:" in line[0:10]):
         pass
     else:
         # End field definition:
-        #
-        if (len(line) == 0) \
-            or (line[0:10] != "          ") \
-            or ("Note:" in line[0:10]):
+        if (len(line) == 0) or (line[0:10] != "          ") or ("Note:" in line[0:10]):
             if field_def:
                 fields.append(field)
                 field_def = False
@@ -37,11 +41,10 @@ for line in input:
                     print("end field")
 
         # End class section:
-        #
-        if (len(line) == 0):
+        if len(line) == 0:
             class_def = False
-            if rec_type == "IOB":
-                print("end class")
+            # if rec_type == "IOB":
+            #     print("end class")
         
         # Start record type:
         # BAG (X'D3A8C9') Syntax
@@ -53,8 +56,8 @@ for line in input:
                 type['fields'] = fields
                 types.append(type)
                 fields = []
-                #if rec_type == "IOB":
-                #    sys.exit(0)
+                # if rec_type == "IOB":
+                #     sys.exit(0)
             rec_types += 1
             rec_type = m.group(1)
             type = {}
@@ -91,7 +94,7 @@ for line in input:
                         if (m.group(2) is None) or (m.group(2) == ""):
                             field['end'] = field['offset']
                             field['length'] = 1
-                        elif (m.group(2) == "n"):
+                        elif m.group(2) == "n":
                             field['end'] = 32760
                             field['length'] = 32760 - field['offset'] + 1
                         else:
@@ -134,6 +137,7 @@ if rec_types > 0:
     type['fields'] = fields
     types.append(type)
     fields = []
+
 # Write types.
 types_sorted = sorted(types, key=lambda k: k['type']) 
 for type in types_sorted:
@@ -142,33 +146,33 @@ for type in types_sorted:
     fields_sorted = type['fields']
     for field in fields_sorted:
         output.write("    offset=%s end=%s length=%s\n" % (field['offset'], field['end'], field['length']))
-#close output file
+
+# Close files.
 input.close()
 output.close()
 
 print("\nTotal record types:  %d" % rec_types)
 
 # Create afp_recs class files.
-for type in types_sorted:
-    ### Open output files.
-    hdrfile = open("%s\\afp_%s_rec_class.h" % (output_path, type['type'].lower()), "w")
-    classfile = open("%s\\afp_%s_rec_class.cpp" % (output_path, type['type'].lower()), "w")
-    fields_sorted = type['fields']
+for rec_type in types_sorted:
+    # Open output file.
+    classfile = open(os.path.join(output_path, f"afp_{rec_type['type'].lower()}_rec.py"), "w")
+    fields_sorted = rec_type['fields']
 
-    
-    ### Write header file.
-    # Write header.
-    data = """#include <stdio.h>
+    # Write class file.
+    data = '''from struct import pack, unpack
 
-#pragma once
-class afp_%s_rec_class
-{
-public:
-                                //Offset: Length: Type: Optional: Exception: Range:                Meaning:\n""" % type['type'].lower()
-    hdrfile.write(data)
+
+class AFP_%s:
+
+    def __init__(self):
+                                        # Offset: Length: Type: Optional: Exception: Range:                Meaning:\n''' % rec_type['type']
+    classfile.write(data)
 
     # Write detail.
     reserved_count = 0
+    parameter_list = ""
+    format_string = ""
     for field in fields_sorted:
         if field['type'] == "":
             if ("triplet" in field['meaning']) or ("Triplet" in field['meaning']):
@@ -178,81 +182,80 @@ public:
                 name = "Reserved_%i" % (reserved_count)
         else:
             name = field['name']
-        if field['length'] > 1:
-            data = "    char %s[%i];" % (name, field['length'])
+        name_formatted = f"self.{name} = None"
+        if len(parameter_list) > 0:
+            parameter_list += ", "
+        parameter_list += f"self.{name}"
+        if field["type"] in ["CHAR", "CODE", "", None]:
+            field_format = f'{field["length"]}s'
+        elif field["type"] in ["SBIN"]:
+            if field["length"] == 1:
+                field_format = f'b'
+            elif field["length"] == 2:
+                field_format = f'h'
+            elif field["length"] == 4:
+                field_format = f'i'
+            else:
+                msg = f'Unknown SBIN field length:  {field["length"]}\n{line}'
+                print(msg)
+                # raise Exception(msg)
         else:
-            data = "    char %s;" % (name)
-        #if field['type'] == "CHAR":
+            msg = f'Unknown field format:  {field["type"]}\n{line}'
+            print(msg)
+            # raise Exception(msg)
+        format_string += field_format
+        # if field['length'] > 1:
+        #     name_formatted = "    char %s[%i];" % (name, field['length'])
+        # else:
+        #     name_formatted = "    char %s;" % (name)
+        # if field['type'] == "CHAR":
         #    if field['length'] == 1:
         #        data = "    char %s[%i];" % (field['name'], field['length'])
         #    else:
         #        data = "    char %s;" % (field['name'])
-        #elif field['type'] == "UNDF":
+        # elif field['type'] == "UNDF":
         #    data = "    char %s[%i];" % (field['name'], field['length'])
-        #elif field['type'] == "":
+        # elif field['type'] == "":
         #    if ("triplet" in field['meaning']) or ("Triplet" in field['meaning']):
         #        data = "    char Triplets[%i];" % (field['length'])
         #    else:
         #        reserved_count += 1
         #        data = "    char reserved_%i[%i];" % (reserved_count, field['length'])
-        #elif field['type'] == "CODE":
+        # elif field['type'] == "CODE":
         #    data = "    char %s;" % (field['name'])
-        #elif field['type'] == "BITS":
+        # elif field['type'] == "BITS":
         #    data = "    char %s;" % (field['name'])
-        #elif field['type'] == "SBIN":
+        # elif field['type'] == "SBIN":
         #    data = "    char %s[%i];" % (field['name'], field['length'])
-        #elif field['type'] == "UBIN":
+        # elif field['type'] == "UBIN":
         #    data = "    char %s[%i];" % (field['name'], field['length'])
-        #else:
+        # else:
         #    print("Error:  Unknown field type ->(%s)" % field['type']
         #    sys.exit(1)
         range_value = field['range'].split("\t")
         meaning = field['meaning'].split("\t")
-        data = "%-30.30s  // %5i   %5i  %-4.4s  %-1.1s         %-5.5s      %-20.20s  %s\n" % (data, field['offset'], field['length'], field['type'], field['optional'], field['exception'], range[0], meaning[0])
-        hdrfile.write(data)
+        data = "        %-30.30s  #  %5i   %5i  %-4.4s  %-1.1s         %-5.5s      %-20.20s  %s\n" % (name_formatted, field['offset'], field['length'], field['type'], field['optional'], field['exception'], range_value[0], meaning[0])
+        classfile.write(data)
         line_count = len(meaning)
         if len(range_value) > line_count:
             line_count = len(range_value)
         if line_count > 1:
             for line in range(1, line_count - 1):
-                data = "%-30.30s  // %5.5s   %5.5s  %-4.4s  %-1.1s         %-5.5s      %-20.20s  %s\n" % ("", "", "", "", "", "", range_value[line], meaning[line])
-                hdrfile.write(data)
+                data = "        %-30.30s  #  %5.5s   %5.5s  %-4.4s  %-1.1s         %-5.5s      %-20.20s  %s\n" % ("", "", "", "", "", "", range_value[line], meaning[line])
+                classfile.write(data)
 
-    # Write footer.
-    data = """
+    # Write methods.
+    data = '''
+    def parse(self, data):
+        %s = unpack(">%s", data)
 
-    afp_%s_rec_class(void);
-    ~afp_%s_rec_class(void);
-
-private:
-
-};\n""" % (type['type'].lower(), type['type'].lower())
-    hdrfile.write(data)
-
-    
-    ### Write class file.
-    # Write body.
-    data = """#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-
-#include "afp_%s_rec_class.h"
-
-afp_%s_rec_class::afp_%s_rec_class(void)
-{
-}
-
-
-afp_%s_rec_class::~afp_%s_rec_class(void)
-{
-}
-\n""" % (type['type'].lower(), type['type'].lower(), type['type'].lower(), type['type'].lower(), type['type'].lower())
+    def format(self):
+        data = pack(">%s", %s)
+        return data
+''' % (parameter_list, format_string, format_string, parameter_list)
     classfile.write(data)
 
-    
-    ### Close output files.
-    hdrfile.close()
+    # Close output file.
     classfile.close()
 
 sys.exit(0)
