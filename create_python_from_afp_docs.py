@@ -182,7 +182,9 @@ for rec_type in types_sorted:
         if len(unpack_parameter_list) > 0:
             unpack_parameter_list += ", "
         unpack_parameter_list += f"self.{name}"
-        if field["type"] in ["CHAR", "CODE", "UNDF", "BITS", "", None]:
+        if ("triplets" in name.lower()) or (field["length"] > 32000):
+            field_format = '{self.%s.len()}s' % name
+        elif field["type"] in ["CHAR", "CODE", "BITS", "UNDF", "", None]:
             field_format = f'{field["length"]}s'
         elif field["type"] == "SBIN":
             if field["length"] == 1:
@@ -216,14 +218,18 @@ for rec_type in types_sorted:
         format_string += field_format
         range_value = field['range'].split("\t")
         meaning = field['meaning'].split("\t")
-        rec_class += "        %-30.30s  #  %5i   %5i  %-4.4s  %-1.1s         %-5.5s      %-20.20s  %s\n" % (name_formatted, field["offset"], field["length"], field["type"], field["optional"], field["exception"], range_value[0], meaning[0])
-        fields_class += f'    StreamFieldAFP(name="{name}", offset="{field["offset"]}", length="{field["length"]}", type="{field["type"]}", optional="{field["optional"]}", exception="{field["exception"]}", range_values={range_value}, meaning={meaning}),\n'
+        exception = field["exception"].replace("X'", "'\\x")
+        rec_class += "        %-30.30s  #  %5i   %5i  %-4.4s  %-1.1s         %-5.5s      %-20.20s  %s\n" \
+                % (name_formatted, field["offset"], field["length"], field["type"], field["optional"], field["exception"], range_value[0], meaning[0])
+        fields_class += f'    StreamFieldAFP(name="{name}", offset={field["offset"]}, length={field["length"]}, type="{field["type"]}", ' \
+                f'optional={True if field["optional"] == "y" else False}, exception={exception}, range_values={range_value}, meaning={meaning}),\n'
         line_count = len(meaning)
         if len(range_value) > line_count:
             line_count = len(range_value)
         if line_count > 1:
             for line in range(1, line_count - 1):
-                rec_class += "        %-30.30s  #  %5.5s   %5.5s  %-4.4s  %-1.1s         %-5.5s      %-20.20s  %s\n" % ("", "", "", "", "", "", range_value[line], meaning[line])
+                rec_class += "        %-30.30s  #  %5.5s   %5.5s  %-4.4s  %-1.1s         %-5.5s      %-20.20s  %s\n" \
+                        % ("", "", "", "", "", "", range_value[line], meaning[line])
 
     # Write class file.
     data = '''""" AFP %s Record """
@@ -246,12 +252,21 @@ class AFP_%s:
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
 %s
     def parse(self, data):
-        %s = unpack(">%s", data)
+        """ Parse the data from a record into the record class fields.
+
+        :param bytes data: Record data
+        """
+        %s = unpack(f">%s", data)
 
     def format(self):
-        data = pack(">%s", %s)
-        return data''' % (rec_type['type'], rec_type['type'].lower(),fields_class, rec_type['type'].lower(), rec_type['type'].lower(), rec_type['type'].lower(),
-                          rec_type['type'], rec_class, unpack_parameter_list, format_string, format_string, pack_parameter_list)
+        """ Format the data from the record class fields into a record.
+
+        :returns: Record data
+        """
+        data = pack(f">%s", %s)
+        return data
+''' % (rec_type['type'], rec_type['type'].lower(), fields_class, rec_type['type'].lower(), rec_type['type'].lower(),
+                          rec_type['type'].lower(), rec_type['type'], rec_class, unpack_parameter_list, format_string, format_string, pack_parameter_list)
     classfile.write(data)
 
     # Close output file.
