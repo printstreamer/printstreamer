@@ -28,11 +28,11 @@ for line in input:
     #    print(line)
 
     # Skip the line.
-    if ("Note:" in line[0:10]):
+    if ("Note:" in line[0:10]) or ("One repeating group in the following format:" in line) or (" repeating groups in the following format:" in line):
         pass
     else:
         # End field definition:
-        if (len(line) == 0) or (line[0:10] != "          ") or ("Note:" in line[0:10]):
+        if (len(line) == 0) or (line[0:10] != "          ") or ("Note:" in line[0:10]) or ("When keywords occur" in line):
             if field_def:
                 fields.append(field)
                 field_def = False
@@ -63,6 +63,8 @@ for line in input:
             type = {}
             type['type'] = rec_type
             print(rec_type)
+            if rec_type in ["BRS", "ERS", "PPO"]:
+                pause = True
 
         # Start field definition:
         if class_def:
@@ -103,21 +105,27 @@ for line in input:
                 if field_def:
                     # Capture other fields.
                     field['type'] += line[type_loc:name_loc].strip()
-                    field['name'] += line[name_loc:range_loc].strip()
-                    field['range'] += line[range_loc:meaning_loc].strip() + "\t"
-                    field['meaning'] += line[meaning_loc:optional_loc].strip() + "\t"
-                    field['optional'] = line[optional_loc:exception_loc].strip()
-                    if field['optional'] == "M":
-                        field['optional'] = "n"
+                    if "Zero or more keywords" in line:
+                        field['name'] = "Keywords"
+                        field['exception'] = "None"
                     else:
-                        field['optional'] = "y"
-                    field['exception'] += line[exception_loc:].strip()
+                        field['name'] += line[name_loc:range_loc].strip()
+                        if field['name'] == "":
+                            field['name'] = "Constant"
+                        field['range'] += line[range_loc:meaning_loc].strip() + "\t"
+                        field['meaning'] += line[meaning_loc:optional_loc].strip() + "\t"
+                        field['optional'] = line[optional_loc:exception_loc].strip()
+                        if field['optional'] == "M":
+                            field['optional'] = "n"
+                        else:
+                            field['optional'] = "y"
+                        field['exception'] += line[exception_loc:].strip()
                 if rec_type == "IOB":
                     print(field)
 
         # Start class section:
         #     Offset            Type       Name                Range              Meaning
-        p = re.compile('\s*?Offset\s+Type\s+Name\s+Range\s+Meaning\s+M\/O\s+Exc')
+        p = re.compile('\|?\s*?Offset\s+Type\s+Name\s+Range\s+Meaning\s+M\/O\s+Exc')
         m = p.match(line)
         if m:
             class_def = True
