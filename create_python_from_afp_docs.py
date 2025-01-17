@@ -14,7 +14,7 @@ fields = []
 # Open files.
 output_path = "C:\\Users\\print\\Documents\\stream\\printstreamer\\afp"
 input = open("C:\\Users\\print\\Documents\\stream\\modca_rec_structure_print.txt", "r")
-output = open("C:\\Users\\print\\Documents\\stream\\printstreamer\\modca_rec_structure.txt", "w")
+# output = open("C:\\Users\\print\\Documents\\stream\\printstreamer\\modca_rec_structure.txt", "w")
 rec_types = 0
 rec_type = ""
 class_def = False
@@ -149,15 +149,16 @@ if rec_types > 0:
 # Write types.
 types_sorted = sorted(types, key=lambda k: k['type']) 
 for type in types_sorted:
-    output.write("%s\n" % (type['type']))
-    #fields_sorted = sorted(type['fields'], key=lambda l: l['offset']) 
+    # output.write("%s\n" % (type['type']))
+    # fields_sorted = sorted(type['fields'], key=lambda l: l['offset'])
     fields_sorted = type['fields']
     for field in fields_sorted:
-        output.write("    offset=%s end=%s length=%s\n" % (field['offset'], field['end'], field['length']))
+        # output.write("    offset=%s end=%s length=%s\n" % (field['offset'], field['end'], field['length']))
+        pass
 
 # Close files.
 input.close()
-output.close()
+# output.close()
 
 print("\nTotal record types:  %d" % rec_types)
 

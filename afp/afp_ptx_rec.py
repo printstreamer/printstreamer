@@ -2,7 +2,9 @@
 
 from struct import pack, unpack
 
+import stream_afp
 from stream_field_afp import StreamFieldAFP
+from stream_function_afp import StreamFunctionAFP
 
 
 afp_ptx_fields_list = [
@@ -25,7 +27,26 @@ class AFP_PTX:
 
         :param bytes data: Record data
         """
-        self.PTOCAdat = unpack(f">{self.PTOCAdat.len()}s", data)
+        # self.PTOCAdat = unpack(f">{self.PTOCAdat.len()}s", data)
+        start = 0
+        length = len(data)
+        while start < length:
+            cur_function = StreamFunctionAFP()
+            value = ""
+            if data[start:start + 1] == b"\x2B":
+                cur_function.length = 2
+                cur_function.type = "ESC"
+            else:
+                # cur_function.length = struct.unpack(">h", self.data[start:start + 1])
+                # cur_function.length = int(self.data[start:start + 1], 2)
+                cur_function.length = ord(data[start:start + 1])
+                cur_function.type = stream_afp.afp_ptx_by_value[data[start + 1:start + 2]]["type"]
+                if (cur_function.type == "TRN") or (cur_function.type == "TRN-C"):
+                    cur_function.data = data[start + 2:start + 2 + cur_function.length - 2]
+                    value = cur_function.data
+            print(
+                f"  PTX function:  type={cur_function.type} start={start} length={cur_function.length} value=({value})")
+            start += cur_function.length
 
     def format(self):
         """ Format the data from the record class fields into a record.

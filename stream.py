@@ -1,7 +1,7 @@
 """ stream:  Printstream/Document Processing: Compose, Analyze, Enhance, Transform """
 
-import sys
 import argparse
+import sys
 from xml.dom import minidom
 
 from stream_parser import StreamParser

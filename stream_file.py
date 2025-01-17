@@ -17,7 +17,7 @@ class StreamFile:
         self.records = 0
         self.bytes = os.path.getsize(name)
         self.segments = []
-        # Single-segment processing until multi-threaded processing of concurrent segments is implemented.
+        # Single-segment processing until multithreading of concurrent segments is implemented.
         self.add_segment(self, 1, start_offset=0, end_offset=self.bytes)
 
     def add_segment(self, file, key, start_offset=None, end_offset=None):
