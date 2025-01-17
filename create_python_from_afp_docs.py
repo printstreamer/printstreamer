@@ -1,5 +1,9 @@
 """ Create python structures and code from a text version of the AFP documentation.
 
+    Create input files using ghostscript and then deleting all but the key section of record types or ptx functions:
+        ps2ascii modca.pdf > modca.txt
+        ps2ascii PTOCA.pdf > ptoca.txt
+
 """
 
 import os
