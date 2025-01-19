@@ -302,16 +302,19 @@ def parse_ptoca_doc():
                     field_def = False
                     class_def = False
 
-            # Start record type:
+            # Get record type.
             m = re.search("([A-Z][A-Z][A-Z]) Control Sequence", line)
             if m:
+                rec_type = m.group(1)
+
+            # Start record type.
+            if "Syntax:" in line:
                 if rec_types > 0:
                     # Save last rec type.
                     type['fields'] = fields
                     types.append(type)
                     fields = []
                 rec_types += 1
-                rec_type = m.group(1)
                 type = {}
                 type['type'] = rec_type
                 print(rec_type)
@@ -475,7 +478,7 @@ def parse_ptoca_doc():
             format_string += field_format
             range_value = field['range'].split("\t")
             meaning = field['meaning'].split("\t")
-            rec_class += "        %-30.30s  #  %5i   %5i  %-4.4s  %-1.1s         %-5.5s      %-20.20s  %s       %s       %s\n" \
+            rec_class += "        %-30.30s  #  %5i   %5i  %-4.4s  %-1.1s         %-5.5s  %s            %-20.20s %s\n" \
                     % (name_formatted, field["offset"], field["length"], field["type"], field["optional"], range_value[0], field["default"], field["indicator"], meaning[0])
             fields_class += f'    StreamFieldAFP(name="{name}", offset={field["offset"]}, length={field["length"]}, type="{field["type"]}", ' \
                     f'optional={True if field["optional"] == "y" else False}, range_values={range_value}, def={field["default"]}, ind={field["indicator"]}, meaning={meaning}),\n'
