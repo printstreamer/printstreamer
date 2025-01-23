@@ -274,10 +274,11 @@ def parse_ptoca_doc():
     """ Parse afp documentation formatted text file: ptoca """
     types = []
     fields = []
+    offset_loc = None
 
     # Open files.
     input_file = open("C:\\Users\\print\\Documents\\stream\\ptoca.txt", "r")  # , encoding="utf-8")
-    output_path = "C:\\Users\\print\\Documents\\stream\\printstreamer\\afp\\ptx"
+    output_path = "C:\\Users\\print\\Documents\\stream\\printstreamer\\afp"
     rec_types = 0
     rec_type = ""
     class_def = False
@@ -287,7 +288,7 @@ def parse_ptoca_doc():
     lines = input_file.readlines()
     for line in lines:
         # Fix bad characters.
-        line = line.replace("\xad", "-").replace("\xff", "").replace("\xfe", "").replace("\x00", "").rstrip()
+        line = line.replace("\xad", "-").replace("\xff", "").replace("\xfe", "").replace("\x00", "").replace("|", " ").rstrip()
         if len(line) == 0:
             continue
 
@@ -296,16 +297,18 @@ def parse_ptoca_doc():
             pass
         else:
             # End field definition:
-            if (len(line) == 0) or ((len(line) >= 49) and (line[48:49].isalnum())):
+            if (len(line) == 0) or ((offset_loc is not None) and (len(line) >= offset_loc) and (line[offset_loc - 2:offset_loc - 1] != "    ")):
                 if field_def:
                     fields.append(field)
                     field_def = False
-                    class_def = False
+                    #class_def = False
 
             # Get record type.
             m = re.search("([A-Z][A-Z][A-Z]) Control Sequence", line)
             if m:
                 rec_type = m.group(1)
+                if rec_type in ["BSU", "ESU", "SEC"]:
+                    pause = True
 
             # Start record type.
             if "Syntax:" in line:
@@ -320,6 +323,10 @@ def parse_ptoca_doc():
                 print(rec_type)
                 if rec_type in ["AMB"]:
                     pause = True
+
+            # End class_def.
+            if "LID is a code with no units of measure" in line:
+                class_def = False
 
             # Start field definition:
             if class_def:
@@ -365,14 +372,22 @@ def parse_ptoca_doc():
                             if field['name'] == "":
                                 field['name'] = "Constant"
                             field['range'] += line[range_loc:meaning_loc].strip() + "\t"
-                            field['meaning'] += line[meaning_loc:optional_loc].strip() + "\t"
+                            field['meaning'] += line[meaning_loc:optional_loc - 1].strip() + "\t"
                             field['optional'] = line[optional_loc:default_loc].strip()
                             if field['optional'] == "M":
                                 field['optional'] = "n"
                             else:
                                 field['optional'] = "y"
                             field['default'] += line[default_loc:indicator_loc].strip()
+                            if field['default'] == "N":
+                                field['default'] = "n"
+                            else:
+                                field['default'] = "y"
                             field['indicator'] += line[indicator_loc:].strip()
+                            if field['indicator'] == "N":
+                                field['indicator'] = "n"
+                            else:
+                                field['indicator'] = "y"
 
             # Start class section:
             #     Offset            Type       Name                Range              Meaning
@@ -385,9 +400,9 @@ def parse_ptoca_doc():
                 name_loc = line.index("Name")
                 range_loc = line.index("Range")
                 meaning_loc = line.index("Meaning")
-                optional_loc = line.index("M/O")
-                default_loc = line.index("Def")
-                indicator_loc = line.index("Ind")
+                optional_loc = line.index("M/O") + 1
+                default_loc = line.index("Def") + 1
+                indicator_loc = line.index("Ind") + 1
                 print("offset_loc=%i" % offset_loc)
                 print("type_loc=%i" % type_loc)
 
@@ -415,11 +430,13 @@ def parse_ptoca_doc():
 
     # Create afp_recs class files.
     for rec_type in types_sorted:
+        print(rec_type)
         # Open output file.
         classfile = open(os.path.join(output_path, f"afp_ptx_{rec_type['type'].lower()}_seq.py"), "w")
         fields_sorted = rec_type['fields']
 
         # Write detail.
+        print(field)
         reserved_count = 0
         pack_parameter_list = ""
         unpack_parameter_list = ""
@@ -427,6 +444,7 @@ def parse_ptoca_doc():
         rec_class = ""
         fields_class = ""
         for field in fields_sorted:
+            print(field)
             if field['type'] == "":
                 if ("triplet" in field['meaning']) or ("Triplet" in field['meaning']):
                     name = "Triplets"
@@ -478,10 +496,12 @@ def parse_ptoca_doc():
             format_string += field_format
             range_value = field['range'].split("\t")
             meaning = field['meaning'].split("\t")
-            rec_class += "        %-30.30s  #  %5i   %5i  %-4.4s  %-1.1s         %-5.5s  %s            %-20.20s %s\n" \
-                    % (name_formatted, field["offset"], field["length"], field["type"], field["optional"], range_value[0], field["default"], field["indicator"], meaning[0])
+            rec_class += "        %-30.30s  #  %5i   %5i  %-4.4s  %-13.13s %-25.25s        %-1.1s    %-1.1s    %-1.1s\n" \
+                    % (name_formatted, field["offset"], field["length"], field["type"], range_value[0], meaning[0], field["optional"], field["default"], field["indicator"])
             fields_class += f'    StreamFieldAFP(name="{name}", offset={field["offset"]}, length={field["length"]}, type="{field["type"]}", ' \
-                    f'optional={True if field["optional"] == "y" else False}, range_values={range_value}, def={field["default"]}, ind={field["indicator"]}, meaning={meaning}),\n'
+                    f'optional={True if field["optional"] == "y" else False}, range_values={range_value}, ' \
+                    f'default={True if field["default"].lower() == "y" else False}, indicator={True if field["indicator"].lower() == "y" else False}, ' \
+                    f'meaning={meaning}),\n'
             line_count = len(meaning)
             if len(range_value) > line_count:
                 line_count = len(range_value)
@@ -508,7 +528,7 @@ for field in afp_ptx_%s_fields_list:
 class AFP_PTX_%s:
 
     def __init__(self):
-                                        # Offset: Length: Type: Optional: Def: Ind: Range:                Meaning:
+                                        # Offset: Length: Type: Range:        Meaning:                  Optional: Def: Ind:
 %s
     def parse(self, data):
         """ Parse the data from a record into the record class fields.

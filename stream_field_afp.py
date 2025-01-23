@@ -4,7 +4,8 @@
 class StreamFieldAFP:
     """ Attributes of a printstream record field. """
     
-    def __init__(self, name=None, offset=None, length=None, type=None, optional=None, exception=None, range_min=None, range_max=None, range_values=None, meaning=None, value=None):
+    def __init__(self, name=None, offset=None, length=None, type=None, optional=None, exception=None, range_min=None,
+                range_max=None, range_values=None, meaning=None, default=None, indicator=None, value=None):
         self.name = name
         self.offset = offset
         self.length = length
@@ -16,4 +17,6 @@ class StreamFieldAFP:
         self.range_max = range_max
         self.range_values = range_values  # List
         self.meaning = meaning  # List
+        self.default = default
+        self.indicator = indicator
         self.value = value
