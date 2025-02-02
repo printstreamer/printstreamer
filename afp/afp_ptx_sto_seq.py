@@ -12,7 +12,6 @@ afp_ptx_sto_fields_list = [
     StreamFieldAFP(name="TYPE", offset=3, length=1, type="CODE", optional=False, range_values=["X'F6' -", ''], default=False, indicator=False, meaning=['Control sequence', '']),
     StreamFieldAFP(name="IORNTION", offset=4, length=2, type="CODE", optional=False, range_values=['See', ''], default=True, indicator=True, meaning=['I-axis orientation', '']),
     StreamFieldAFP(name="BORNTION", offset=6, length=2, type="CODE", optional=False, range_values=['See', ''], default=True, indicator=True, meaning=['B-axis orientation', '']),
-    StreamFieldAFP(name="hich is 359 de", offset=1011001111, length=1, type="110110', w", optional=True, range_values=['grees and 59 m', ''], default=True, indicator=True, meaning=['inutes. Increasing values', '']),
     ]
 afp_ptx_sto_fields = {}
 for field in afp_ptx_sto_fields_list:
@@ -29,19 +28,18 @@ class AFP_PTX_STO:
         self.TYPE = None                #      3       1  CODE  X'F6' -       Control sequence                 n    n    n
         self.IORNTION = None            #      4       2  CODE  See           I-axis orientation               n    y    y
         self.BORNTION = None            #      6       2  CODE  See           B-axis orientation               n    y    y
-        self.hich is 359 de = None      #  1011001111       1  1101  grees and 59  inutes. Increasing values        y    y    y
 
     def parse(self, data):
         """ Parse the data from a record into the record class fields.
 
         :param bytes data: Record data
         """
-        self.PREFIX, self.CLASS, self.LENGTH, self.TYPE, self.IORNTION, self.BORNTION, self.hich is 359 de = unpack(f">1s1sB1s2s2s", data)
+        self.PREFIX, self.CLASS, self.LENGTH, self.TYPE, self.IORNTION, self.BORNTION = unpack(f">1s1sB1s2s2s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">1s1sB1s2s2s", self.PREFIX, self.CLASS, self.LENGTH, self.TYPE, self.IORNTION, self.BORNTION, self.hich is 359 de)
+        data = pack(f">1s1sB1s2s2s", self.PREFIX, self.CLASS, self.LENGTH, self.TYPE, self.IORNTION, self.BORNTION)
         return data

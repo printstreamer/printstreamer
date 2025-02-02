@@ -551,6 +551,10 @@ class AFP_PTX_%s:
         # Close output file.
         classfile.close()
 
+    # Create afp_ptx seq import list.
+    for rec_type in types_sorted:
+        print(f"from afp_ptx_{rec_type['type'].lower()}_seq import AFP_PTX_{rec_type['type'].upper()}")
+
 
 # parse_modca_doc()
 parse_ptoca_doc()

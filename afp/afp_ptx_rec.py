@@ -3,6 +3,29 @@
 from struct import pack, unpack
 
 import stream_afp
+from afp_ptx_amb_seq import AFP_PTX_AMB
+from afp_ptx_ami_seq import AFP_PTX_AMI
+from afp_ptx_bln_seq import AFP_PTX_BLN
+from afp_ptx_bsu_seq import AFP_PTX_BSU
+from afp_ptx_cfl_seq import AFP_PTX_CFL
+from afp_ptx_dbr_seq import AFP_PTX_DBR
+from afp_ptx_dir_seq import AFP_PTX_DIR
+from afp_ptx_esu_seq import AFP_PTX_ESU
+from afp_ptx_nop_seq import AFP_PTX_NOP
+from afp_ptx_ovs_seq import AFP_PTX_OVS
+from afp_ptx_rmb_seq import AFP_PTX_RMB
+from afp_ptx_rmi_seq import AFP_PTX_RMI
+from afp_ptx_rps_seq import AFP_PTX_RPS
+from afp_ptx_sbi_seq import AFP_PTX_SBI
+from afp_ptx_sec_seq import AFP_PTX_SEC
+from afp_ptx_sia_seq import AFP_PTX_SIA
+from afp_ptx_sim_seq import AFP_PTX_SIM
+from afp_ptx_stc_seq import AFP_PTX_STC
+from afp_ptx_sto_seq import AFP_PTX_STO
+from afp_ptx_svi_seq import AFP_PTX_SVI
+from afp_ptx_tbm_seq import AFP_PTX_TBM
+from afp_ptx_trn_seq import AFP_PTX_TRN
+from afp_ptx_usc_seq import AFP_PTX_USC
 from stream_field_afp import StreamFieldAFP
 from stream_function_afp import StreamFunctionAFP
 
@@ -41,9 +64,13 @@ class AFP_PTX:
                 # cur_function.length = int(self.data[start:start + 1], 2)
                 cur_function.length = ord(data[start:start + 1])
                 cur_function.type = stream_afp.afp_ptx_by_value[data[start + 1:start + 2]]["type"]
+                seq_data = data[start + 2:start + 2 + cur_function.length - 2]
                 if (cur_function.type == "TRN") or (cur_function.type == "TRN-C"):
-                    cur_function.data = data[start + 2:start + 2 + cur_function.length - 2]
-                    value = cur_function.data
+                    # cur_function.data = data[start + 2:start + 2 + cur_function.length - 2]
+                    # value = cur_function.data
+                    seq = AFP_PTX_TRN()
+                    seq.parse(seq_data)
+                    print(seq)
             print(
                 f"  PTX function:  type={cur_function.type} start={start} length={cur_function.length} value=({value})")
             start += cur_function.length

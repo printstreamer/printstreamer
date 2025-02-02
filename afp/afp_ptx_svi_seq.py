@@ -11,9 +11,6 @@ afp_ptx_svi_fields_list = [
     StreamFieldAFP(name="LENGTH", offset=2, length=1, type="UBIN", optional=True, range_values=['4', ''], default=False, indicator=False, meaning=['Control sequence', '']),
     StreamFieldAFP(name="TYPE", offset=3, length=1, type="CODE", optional=True, range_values=["X'C4' -", ''], default=False, indicator=False, meaning=['Control sequence', '']),
     StreamFieldAFP(name="INCRMENT", offset=4, length=2, type="SBIN", optional=True, range_values=["X'0000' -", ''], default=True, indicator=True, meaning=['Increment', '']),
-    StreamFieldAFP(name="nt variable sp", offset=1, length=1, type="The curre", optional=True, range_values=['ace character', ''], default=True, indicator=True, meaning=['increment', '']),
-    StreamFieldAFP(name="lt variable sp", offset=2, length=1, type="The defau", optional=True, range_values=['ace character', ''], default=True, indicator=True, meaning=['increment of the active cod', '']),
-    StreamFieldAFP(name="cter increment", offset=3, length=1, type="The chara", optional=True, range_values=['of the defaul', ''], default=True, indicator=True, meaning=['t variable space character', '']),
     ]
 afp_ptx_svi_fields = {}
 for field in afp_ptx_svi_fields_list:
@@ -29,21 +26,18 @@ class AFP_PTX_SVI:
         self.LENGTH = None              #      2       1  UBIN  4             Control sequence                 y    n    n
         self.TYPE = None                #      3       1  CODE  X'C4' -       Control sequence                 y    n    n
         self.INCRMENT = None            #      4       2  SBIN  X'0000' -     Increment                        y    y    y
-        self.nt variable sp = None      #      1       1  The   ace character increment                        y    y    y
-        self.lt variable sp = None      #      2       1  The   ace character increment of the active c        y    y    y
-        self.cter increment = None      #      3       1  The   of the defaul t variable space characte        y    y    y
 
     def parse(self, data):
         """ Parse the data from a record into the record class fields.
 
         :param bytes data: Record data
         """
-        self.PREFIX, self.CLASS, self.LENGTH, self.TYPE, self.INCRMENT, self.nt variable sp, self.lt variable sp, self.cter increment = unpack(f">1s1sB1sh", data)
+        self.PREFIX, self.CLASS, self.LENGTH, self.TYPE, self.INCRMENT = unpack(f">1s1sB1sh", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">1s1sB1sh", self.PREFIX, self.CLASS, self.LENGTH, self.TYPE, self.INCRMENT, self.nt variable sp, self.lt variable sp, self.cter increment)
+        data = pack(f">1s1sB1sh", self.PREFIX, self.CLASS, self.LENGTH, self.TYPE, self.INCRMENT)
         return data
