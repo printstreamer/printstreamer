@@ -64,7 +64,8 @@ class AFP_PTX:
                 # cur_function.length = int(self.data[start:start + 1], 2)
                 cur_function.length = ord(data[start:start + 1])
                 cur_function.type = stream_afp.afp_ptx_by_value[data[start + 1:start + 2]]["type"]
-                seq_data = data[start + 2:start + 2 + cur_function.length - 2]
+                #seq_data = data[start + 2:start + 2 + cur_function.length - 2]
+                seq_data = data[start:start + cur_function.length]
                 if (cur_function.type == "TRN") or (cur_function.type == "TRN-C"):
                     # cur_function.data = data[start + 2:start + 2 + cur_function.length - 2]
                     # value = cur_function.data
