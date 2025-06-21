@@ -2,6 +2,7 @@
 
 from struct import pack, unpack
 
+from afp_class import AFPClass
 from stream_field_afp import StreamFieldAFP
 
 
@@ -14,7 +15,7 @@ for field in afp_ptx_rps_fields_list:
     afp_ptx_rps_fields[field.name] = field
 
 
-class AFP_PTX_RPS:
+class AFP_PTX_RPS(AFPClass):
 
     def __init__(self):
                                         # Offset: Length: Type: Range:        Meaning:                  Optional: Def: Ind:
@@ -26,12 +27,12 @@ class AFP_PTX_RPS:
 
         :param bytes data: Record data
         """
-        self.RLENGTH, self.RPTDATA = unpack(f">H251s", data)
+        self.RLENGTH, self.RPTDATA = unpack(f">H{len(data)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">H251s", self.RLENGTH, self.RPTDATA)
+        data = pack(f">H{len(self.RPTDATA)}s", self.RLENGTH, self.RPTDATA)
         return data

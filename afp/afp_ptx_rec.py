@@ -7,7 +7,6 @@ from afp_ptx_amb_seq import AFP_PTX_AMB
 from afp_ptx_ami_seq import AFP_PTX_AMI
 from afp_ptx_bln_seq import AFP_PTX_BLN
 from afp_ptx_bsu_seq import AFP_PTX_BSU
-from afp_ptx_cfl_seq import AFP_PTX_CFL
 from afp_ptx_dbr_seq import AFP_PTX_DBR
 from afp_ptx_dir_seq import AFP_PTX_DIR
 from afp_ptx_esu_seq import AFP_PTX_ESU
@@ -50,7 +49,6 @@ class AFP_PTX:
 
         :param bytes data: Record data
         """
-        # self.PTOCAdat = unpack(f">{self.PTOCAdat.len()}s", data)
         start = 0
         length = len(data)
         while start < length:
@@ -64,16 +62,12 @@ class AFP_PTX:
                 # cur_function.length = int(self.data[start:start + 1], 2)
                 cur_function.length = ord(data[start:start + 1])
                 cur_function.type = stream_afp.afp_ptx_by_value[data[start + 1:start + 2]]["type"]
-                #seq_data = data[start + 2:start + 2 + cur_function.length - 2]
-                seq_data = data[start:start + cur_function.length]
+                seq_data = data[start + 2:start + 2 + cur_function.length - 2]
                 if (cur_function.type == "TRN") or (cur_function.type == "TRN-C"):
-                    # cur_function.data = data[start + 2:start + 2 + cur_function.length - 2]
-                    # value = cur_function.data
                     seq = AFP_PTX_TRN()
                     seq.parse(seq_data)
                     print(seq)
-            print(
-                f"  PTX function:  type={cur_function.type} start={start} length={cur_function.length} value=({value})")
+            print(f"  PTX function:  type={cur_function.type} start={start} length={cur_function.length} data=()")
             start += cur_function.length
 
     def format(self):

@@ -192,8 +192,7 @@ for afp_ptx_record_function in afp_ptx_record_functions:
 
         
 class StreamAFP:
-    """ Code functions of AFP printstream files. """
+    """ Code functions of afp printstream files. """
 
     def __init__(self):
         pass
-        

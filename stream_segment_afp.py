@@ -1,4 +1,4 @@
-""" Parse printstream file segment. """
+""" Parse afp printstream file segment. """
 
 import os
 import sys
@@ -9,7 +9,7 @@ import stream_afp
 
 
 class StreamSegmentAFP:
-    """ Manage the detail parsing of a segment of a printstream segment. """
+    """ Manage the detail parsing of a segment of an afp printstream segment. """
     
     def __init__(self, file, key, start_offset=None, end_offset=None):
         self.file = file
@@ -26,7 +26,7 @@ class StreamSegmentAFP:
 
     def parse(self):
         """ Parse a file segment. """
-        # Open files.
+        # Open file.
         input_file = open(self.name, "rb")
         # Position to segment start in input file.
         input_file.seek(self.start_offset, 1)

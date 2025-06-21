@@ -3,6 +3,7 @@
 import os
 
 from stream_segment_afp import StreamSegmentAFP
+from stream_segment_pdf import StreamSegmentPDF
 
 
 class StreamFile:
@@ -18,7 +19,10 @@ class StreamFile:
         self.bytes = os.path.getsize(name)
         self.segments = []
         # Single-segment processing until multithreading of concurrent segments is implemented.
-        self.add_segment(self, 1, start_offset=0, end_offset=self.bytes)
+        if self.file_type == "afp":
+            self.add_segment(self, 1, start_offset=0, end_offset=self.bytes)
+        elif self.file_type == "pdf":
+            self.add_segment(self, 1, start_offset=0)
 
     def add_segment(self, file, key, start_offset=None, end_offset=None):
         """ Add a parsing segment to the parser segment list.
@@ -33,6 +37,8 @@ class StreamFile:
         segment = None
         if self.file_type == "afp":
             segment = StreamSegmentAFP(self, key, start_offset=start_offset, end_offset=end_offset)
+        elif self.file_type == "pdf":
+            segment = StreamSegmentPDF(self, key, start_offset=start_offset, end_offset=end_offset)
         # Append segment to parser list.
         self.segments.append(segment)
         return segment

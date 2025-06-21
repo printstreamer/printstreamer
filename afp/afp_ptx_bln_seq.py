@@ -2,6 +2,7 @@
 
 from struct import pack, unpack
 
+from afp_class import AFPClass
 from stream_field_afp import StreamFieldAFP
 
 
@@ -12,7 +13,7 @@ for field in afp_ptx_bln_fields_list:
     afp_ptx_bln_fields[field.name] = field
 
 
-class AFP_PTX_BLN:
+class AFP_PTX_BLN(AFPClass):
 
     def __init__(self):
                                         # Offset: Length: Type: Range:        Meaning:                  Optional: Def: Ind:

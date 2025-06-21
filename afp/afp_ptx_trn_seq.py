@@ -2,6 +2,7 @@
 
 from struct import pack, unpack
 
+from afp_class import AFPClass
 from stream_field_afp import StreamFieldAFP
 
 
@@ -13,7 +14,7 @@ for field in afp_ptx_trn_fields_list:
     afp_ptx_trn_fields[field.name] = field
 
 
-class AFP_PTX_TRN:
+class AFP_PTX_TRN(AFPClass):
 
     def __init__(self):
                                         # Offset: Length: Type: Range:        Meaning:                  Optional: Def: Ind:
@@ -24,12 +25,12 @@ class AFP_PTX_TRN:
 
         :param bytes data: Record data
         """
-        self.TRNDATA = unpack(f">253s", data)
+        self.TRNDATA = unpack(f">{len(data)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">253s", self.TRNDATA)
+        data = pack(f">{len(self.TRNDATA)}s", self.TRNDATA)
         return data
