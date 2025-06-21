@@ -1,1 +1,1 @@
-## Document Stream Utilities: Compose, Analyze, Enhance, Transform
+## Document Stream Utilities: Compose, Analyze, Extract, Enhance, Transform
