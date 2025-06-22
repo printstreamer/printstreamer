@@ -6,9 +6,9 @@ import stream_pdf
 class StreamPagePDF:
     """ pdf printstream page. """
     
-    def __init__(self, segment, offset=None):
+    def __init__(self, segment, page_offset=None):
         self.segment = segment
-        self.offset = offset
+        self.page_offset = page_offset
         self.length = 0
         self.data = None
         self.text = []
@@ -18,7 +18,7 @@ class StreamPagePDF:
     def parse(self):
         """ Parse a pdf printstream page. """
         # Parse pdf page.
-        self.data = self.segment.file_obj.load_page(self.offset)
+        self.data = self.segment.file_obj.load_page(self.page_offset)
         # # Extract text with position and font.
         # text_bbox = [float('inf'), float('inf'), float('-inf'), float('-inf')]
         # Extract text and bounding boxes.

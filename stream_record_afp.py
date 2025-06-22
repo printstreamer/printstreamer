@@ -19,7 +19,5 @@ class StreamRecordAFP:
         length = self.length - start
         data = self.data[start:length]
         if self.type == "PTX":
-            ptx = AFP_PTX()
+            ptx = AFP_PTX(self.segment)
             ptx.parse(data)
-        elif self.type == "BPG":
-            self.segment.pages += 1

@@ -20,25 +20,27 @@ class StreamFile:
         self.segments = []
         # Single-segment processing until multithreading of concurrent segments is implemented.
         if self.file_type == "afp":
-            self.add_segment(self, 1, start_offset=0, end_offset=self.bytes)
+            self.add_segment(self, 1, start_byte_offset=0, end_byte_offset=self.bytes)
         elif self.file_type == "pdf":
-            self.add_segment(self, 1, start_offset=0)
+            self.add_segment(self, 1, start_page_offset=0)
 
-    def add_segment(self, file, key, start_offset=None, end_offset=None):
+    def add_segment(self, file, key, start_byte_offset=None, end_byte_offset=None, start_page_offset=None, end_page_offset=None):
         """ Add a parsing segment to the parser segment list.
 
         :param StreamFile file: Stream file object
         :param int key: Segment key
-        :param int start_offset:
-        :param int end_offset:
+        :param int start_byte_offset:
+        :param int end_byte_offset:
+        :param int start_page_offset:
+        :param int end_page_offset:
         :return: StreamSegment object
         """
         # Instantiate segment.
         segment = None
         if self.file_type == "afp":
-            segment = StreamSegmentAFP(self, key, start_offset=start_offset, end_offset=end_offset)
+            segment = StreamSegmentAFP(self, key, start_byte_offset=start_byte_offset, end_byte_offset=end_byte_offset)
         elif self.file_type == "pdf":
-            segment = StreamSegmentPDF(self, key, start_offset=start_offset, end_offset=end_offset)
+            segment = StreamSegmentPDF(self, key, start_page_offset=start_page_offset, end_page_offset=end_page_offset)
         # Append segment to parser list.
         self.segments.append(segment)
         return segment

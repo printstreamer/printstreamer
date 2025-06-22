@@ -39,7 +39,9 @@ for field in afp_ptx_fields_list:
 
 class AFP_PTX:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.PTOCAdat = None            #      0   32761  UNDF  y         X'00'                            Up to 32,759 bytes of
                                         #                                                                  PTOCA-defined data
@@ -66,6 +68,9 @@ class AFP_PTX:
                 if (cur_function.type == "TRN") or (cur_function.type == "TRN-C"):
                     seq = AFP_PTX_TRN()
                     seq.parse(seq_data)
+                    self.page.text.append({'text': seq.TRNDATA, 'font_name': None, 'font_size': None,
+                            'color': None, 'color_rgb': None, 'x': None, 'y': None,
+                            'bbox': (None, None, None, None)})
                     print(seq)
             print(f"  PTX function:  type={cur_function.type} start={start} length={cur_function.length} data=()")
             start += cur_function.length

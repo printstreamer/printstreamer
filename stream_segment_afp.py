@@ -4,6 +4,7 @@ import os
 import sys
 import struct
 
+from stream_page_afp import StreamPageAFP
 from stream_record_afp import StreamRecordAFP
 import stream_afp
 
@@ -11,29 +12,31 @@ import stream_afp
 class StreamSegmentAFP:
     """ Manage the detail parsing of a segment of an afp printstream segment. """
     
-    def __init__(self, file, key, start_offset=None, end_offset=None):
+    def __init__(self, file, key, start_byte_offset=None, end_byte_offset=None):
         self.file = file
         self.parser = self.file.parser
         self.name = self.file.name
         self.file_type = self.file.file_type
         self.key = key
-        self.start_offset = start_offset
-        self.end_offset = end_offset
+        self.start_byte_offset = start_byte_offset
+        self.end_byte_offset = end_byte_offset
         self.documents = 0
         self.pages = 0
         self.records = 0
-        self.bytes = self.end_offset - self.start_offset
+        self.bytes = self.end_byte_offset - self.start_byte_offset
+        self.cur_page = None
+        self.cur_document = None
 
     def parse(self):
         """ Parse a file segment. """
         # Open file.
         input_file = open(self.name, "rb")
         # Position to segment start in input file.
-        input_file.seek(self.start_offset, 1)
+        input_file.seek(self.start_byte_offset, 1)
         # Parse records until end of segment
-        cur_offset = self.start_offset
+        cur_offset = self.start_byte_offset
         rec_count = 0
-        while cur_offset < self.end_offset:
+        while cur_offset < self.end_byte_offset:
             cc = input_file.read(1)
             work = input_file.read(2)
             rec_type = input_file.read(3)
@@ -54,6 +57,12 @@ class StreamSegmentAFP:
                 cur_rec.data = rec_data
                 cur_rec.length = rec_len
                 cur_rec.type = rec_type_cur["type"]
+                if cur_rec.type == "BPG":
+                    self.pages += 1
+                    self.cur_page = StreamPageAFP(segment=self, byte_offset=cur_offset)
+                elif cur_rec.type == "EPG":
+                    pause = True
+                    print(self.cur_page.text)
                 cur_rec.parse()
                 self.records += 1
             else:
