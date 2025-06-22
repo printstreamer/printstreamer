@@ -30,6 +30,7 @@ class StreamPagePDF:
                         self.text.append({
                             "text": span["text"],
                             "font_name": span["font"],
+                            "font_typeface": span["font"],
                             "font_size": span["size"],
                             "color": span["color"],
                             "color_rgb": stream_pdf.decode_color(span["color"]),

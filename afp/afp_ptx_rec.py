@@ -42,6 +42,8 @@ class AFP_PTX:
     def __init__(self, segment):
         self.segment = segment
         self.page = self.segment.cur_page
+        self.cur_x = None
+        self.cur_y = None
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.PTOCAdat = None            #      0   32761  UNDF  y         X'00'                            Up to 32,759 bytes of
                                         #                                                                  PTOCA-defined data
@@ -68,10 +70,26 @@ class AFP_PTX:
                 if (cur_function.type == "TRN") or (cur_function.type == "TRN-C"):
                     seq = AFP_PTX_TRN()
                     seq.parse(seq_data)
-                    self.page.text.append({'text': seq.TRNDATA, 'font_name': None, 'font_size': None,
-                            'color': None, 'color_rgb': None, 'x': None, 'y': None,
-                            'bbox': (None, None, None, None)})
+                    self.page.text.append({'text': seq.TRNDATA, 'font_name': None, 'font_typeface': None,
+                            'font_size': None, 'color': None, 'color_rgb': None, 'x': self.cur_x, 'y': self.cur_y,
+                            'bbox': (self.cur_x, self.cur_y, None, None)})
                     print(seq)
+                elif (cur_function.type == "AMI") or (cur_function.type == "AMI-C"):
+                    seq = AFP_PTX_AMI()
+                    seq.parse(seq_data)
+                    self.cur_x = seq.DSPLCMNT[0]
+                elif (cur_function.type == "AMB") or (cur_function.type == "AMB-C"):
+                    seq = AFP_PTX_AMB()
+                    seq.parse(seq_data)
+                    self.cur_y = seq.DSPLCMNT[0]
+                elif (cur_function.type == "RMI") or (cur_function.type == "RMI-C"):
+                    seq = AFP_PTX_RMI()
+                    seq.parse(seq_data)
+                    self.cur_x += seq.INCRMENT[0]
+                elif (cur_function.type == "RMB") or (cur_function.type == "RMB-C"):
+                    seq = AFP_PTX_RMB()
+                    seq.parse(seq_data)
+                    self.cur_y += seq.INCRMENT[0]
             print(f"  PTX function:  type={cur_function.type} start={start} length={cur_function.length} data=()")
             start += cur_function.length
 
