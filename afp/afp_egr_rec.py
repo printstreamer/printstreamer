@@ -16,7 +16,10 @@ for field in afp_egr_fields_list:
 
 class AFP_EGR:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.GdoName = None             #      0       8  CHAR  y         X'02'                            Name of the graphics data
                                         #                                                                  object
@@ -28,7 +31,8 @@ class AFP_EGR:
 
         :param bytes data: Record data
         """
-        self.GdoName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
+        pass
+        # self.GdoName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

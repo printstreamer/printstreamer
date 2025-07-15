@@ -15,7 +15,10 @@ for field in afp_nop_fields_list:
 
 class AFP_NOP:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.UndfData = None            #      0   32761  UNDF  y         X'00'                            Up to 32,759 bytes of data
                                         #                                                                  with no architectural
@@ -26,7 +29,8 @@ class AFP_NOP:
 
         :param bytes data: Record data
         """
-        self.UndfData = unpack(f">{self.UndfData.len()}s", data)
+        pass
+        # self.UndfData = unpack(f">{self.UndfData.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

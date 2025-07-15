@@ -10,11 +10,11 @@ afp_ptx_sec_fields_list = [
     StreamFieldAFP(name="Reserved_1", offset=0, length=1, type="", optional=False, range_values=['', ''], default=False, indicator=False, meaning=['Reserved; must be', '']),
     StreamFieldAFP(name="COLSPCE", offset=1, length=1, type="CODE", optional=False, range_values=['', ''], default=False, indicator=False, meaning=['Color space', '']),
     StreamFieldAFP(name="Reserved_2", offset=2, length=4, type="", optional=False, range_values=['', ''], default=False, indicator=False, meaning=['Reserved; must be', '']),
-    StreamFieldAFP(name="COLSIZE1", offset=6, length=1, type="UBIN", optional=False, range_values=["X'01' �\x03��", ''], default=False, indicator=False, meaning=['Number of bits in', '']),
-    StreamFieldAFP(name="COLSIZE2", offset=7, length=1, type="UBIN", optional=False, range_values=["X'00' �\x03��", ''], default=False, indicator=False, meaning=['Number of bits in', '']),
-    StreamFieldAFP(name="COLSIZE3", offset=8, length=1, type="UBIN", optional=False, range_values=["X'00' �\x03��", ''], default=False, indicator=False, meaning=['Number of bits in', '']),
-    StreamFieldAFP(name="COLSIZE4", offset=9, length=1, type="UBIN", optional=False, range_values=["X'00' �\x03��", ''], default=False, indicator=False, meaning=['Number of bits in', '']),
-    StreamFieldAFP(name="COLVALUE", offset=10, length=4, type="UBIN", optional=False, range_values=["X'00' �\x03��", ''], default=False, indicator=False, meaning=['Number of bits in', ''])
+    StreamFieldAFP(name="COLSIZE1", offset=6, length=1, type="UBIN", optional=False, range_values=["X'01' - X'08'", ''], default=False, indicator=False, meaning=['Number of bits in', '']),
+    StreamFieldAFP(name="COLSIZE2", offset=7, length=1, type="UBIN", optional=False, range_values=["X'00' - X'08'", ''], default=False, indicator=False, meaning=['Number of bits in', '']),
+    StreamFieldAFP(name="COLSIZE3", offset=8, length=1, type="UBIN", optional=False, range_values=["X'00' - X'08'", ''], default=False, indicator=False, meaning=['Number of bits in', '']),
+    StreamFieldAFP(name="COLSIZE4", offset=9, length=1, type="UBIN", optional=False, range_values=["X'00' - X'08'", ''], default=False, indicator=False, meaning=['Number of bits in', '']),
+    StreamFieldAFP(name="COLVALUE", offset=10, length=4, type="UBIN", optional=False, range_values=["X'00' - X'08'", ''], default=False, indicator=False, meaning=['Number of bits in', ''])
     ]
 afp_ptx_sec_fields = {}
 for field in afp_ptx_sec_fields_list:
@@ -23,7 +23,10 @@ for field in afp_ptx_sec_fields_list:
 
 class AFP_PTX_SEC(AFPClass):
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Range:        Meaning:                  Optional: Def: Ind:
         self.Reserved_1 = None          #      0       1                      Reserved; must be                n    n    n
         self.COLSPCE = None             #      1       1  CODE                Color space                      n    n    n
@@ -39,7 +42,8 @@ class AFP_PTX_SEC(AFPClass):
 
         :param bytes data: Record data
         """
-        self.Reserved_1, self.COLSPCE, self.Reserved_2, self.COLSIZE1, self.COLSIZE2, self.COLSIZE3, self.COLSIZE4, self.COLVALUE = unpack(f">1s1s1sBBBB1s", data)
+        pass
+        # self.Reserved_1, self.COLSPCE, self.Reserved_2, self.COLSIZE1, self.COLSIZE2, self.COLSIZE3, self.COLSIZE4, self.COLVALUE = unpack(f">1s1s1sBBBB1s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

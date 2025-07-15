@@ -17,7 +17,10 @@ for field in afp_ptx_sto_fields_list:
 
 class AFP_PTX_STO(AFPClass):
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Range:        Meaning:                  Optional: Def: Ind:
         self.IORNTION = None            #      0       2  CODE  See           I-axis orientation               n    y    y
         self.BORNTION = None            #      2       2  CODE  See           B-axis orientation               n    y    y
@@ -27,7 +30,8 @@ class AFP_PTX_STO(AFPClass):
 
         :param bytes data: Record data
         """
-        self.IORNTION, self.BORNTION = unpack(f">2s2s", data)
+        pass
+        # self.IORNTION, self.BORNTION = unpack(f">2s2s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

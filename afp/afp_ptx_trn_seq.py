@@ -16,7 +16,10 @@ for field in afp_ptx_trn_fields_list:
 
 class AFP_PTX_TRN(AFPClass):
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Range:        Meaning:                  Optional: Def: Ind:
         self.TRNDATA = None             #      0     253  CHAR  Not           Transparent data                 y    n    n
 
@@ -26,6 +29,7 @@ class AFP_PTX_TRN(AFPClass):
         :param bytes data: Record data
         """
         self.TRNDATA = unpack(f">{len(data)}s", data)
+        self.TRNDATA = self.TRNDATA[0].decode('latin1', errors='ignore')
 
     def format(self):
         """ Format the data from the record class fields into a record.

@@ -1,5 +1,11 @@
 """ AFP-specific literals and code. """
 
+
+#import afp_bag_rec
+#from afp_bpg_rec import AFP_BPG
+#from afp_ptx_rec import AFP_PTX
+
+
 afp_record_types = [
     {"type": "BAG", "code": "D3A8C9", "value": b"\xd3\xa8\xc9", "architecture": "modca", "description": "Begin Active Environment Group"},
     {"type": "BBC", "code": "D3A8EB", "value": b"\xd3\xa8\xeb", "architecture": "modca", "description": "Begin Bar Code Object"},
@@ -85,31 +91,31 @@ afp_record_types = [
     {"type": "PTD", "code": "D3B19B", "value": b"\xd3\xb1\x9b", "architecture": "modca", "description": "Presentation Text Data Descriptor"},
     {"type": "PTX", "code": "D3EE9B", "value": b"\xd3\xee\x9b", "architecture": "modca", "description": "Presentation Text Data"},
     {"type": "TLE", "code": "D3A090", "value": b"\xd3\xa0\x90", "architecture": "modca", "description": "Tag Logical Element"},
-    {"type": "BCF", "code": "D3A88A", "value": b"\xd3\xa8\x8a", "architecture": "foca", "description": "Begin Coded Font"},
-    {"type": "BCP", "code": "D3A887", "value": b"\xd3\xa8\x87", "architecture": "foca", "description": "Begin Code Page"},
-    {"type": "BFN", "code": "D3A889", "value": b"\xd3\xa8\x89", "architecture": "foca", "description": "Begin Font"},
-    {"type": "CFC", "code": "D3A78A", "value": b"\xd3\xa7\x8a", "architecture": "foca", "description": "Coded Font Control"},
-    {"type": "CFI", "code": "D38C8A", "value": b"\xd3\x8C\x8a", "architecture": "foca", "description": "Coded Font Index"},
-    {"type": "CPC", "code": "D3A787", "value": b"\xd3\xa7\x87", "architecture": "foca", "description": "Code Page Control"},
-    {"type": "CPD", "code": "D3A687", "value": b"\xd3\xa6\x87", "architecture": "foca", "description": "Code Page Descriptor"},
-    {"type": "CPI", "code": "D38C87", "value": b"\xd3\x8C\x87", "architecture": "foca", "description": "Code Page Index"},
-    {"type": "ECF", "code": "D3A98A", "value": b"\xd3\xa9\x8a", "architecture": "foca", "description": "End Coded Font"},
-    {"type": "ECP", "code": "D3A987", "value": b"\xd3\xa9\x87", "architecture": "foca", "description": "End Code Page"},
-    {"type": "EFN", "code": "D3A989", "value": b"\xd3\xa9\x89", "architecture": "foca", "description": "End Font"},
-    {"type": "FNC", "code": "D3A789", "value": b"\xd3\xa7\x89", "architecture": "foca", "description": "Font Control"},
-    {"type": "FND", "code": "D3A689", "value": b"\xd3\xa6\x89", "architecture": "foca", "description": "Font Descriptor"},
-    {"type": "FNG", "code": "D3EE89", "value": b"\xd3\xee\x89", "architecture": "foca", "description": "Font Patterns"},
-    {"type": "FNI", "code": "D38C89", "value": b"\xd3\x8c\x89", "architecture": "foca", "description": "Font Index"},
-    {"type": "FNM", "code": "D3A289", "value": b"\xd3\xa2\x89", "architecture": "foca", "description": "Font Patterns Map"},
-    {"type": "FNN", "code": "D3AB89", "value": b"\xd3\xab\x89", "architecture": "foca", "description": "Font Name Map"},
-    {"type": "FNO", "code": "D3AE89", "value": b"\xd3\xae\x89", "architecture": "foca", "description": "Font Orientation"},
-    {"type": "FNP", "code": "D3AC89", "value": b"\xd3\xac\x89", "architecture": "foca", "description": "Font Position"},
-    {"type": "GAD", "code": "D3EEBB", "value": b"\xd3\xee\xbb", "architecture": "goca", "description": "Graphics Data"},
-    {"type": "GDD", "code": "D3A6BB", "value": b"\xd3\xa6\xbb", "architecture": "goca", "description": "Graphics Data Descriptor"},
-    {"type": "IDD", "code": "D3A6FB", "value": b"\xd3\xa6\xfb", "architecture": "ioca", "description": "Image Data Descriptor"},
-    {"type": "IPD", "code": "D3EEFB", "value": b"\xd3\xee\xfb", "architecture": "ioca", "description": "Image Picture Data"},
-    {"type": "BDA", "code": "D3EEEB", "value": b"\xd3\xee\xeb", "architecture": "bcoca", "description": "Bar Code Data"},
-    {"type": "BDD", "code": "D3A6EB", "value": b"\xd3\xa6\xeb", "architecture": "bcoca", "description": "Bar Code Data Descriptor"},
+    # {"type": "BCF", "code": "D3A88A", "value": b"\xd3\xa8\x8a", "architecture": "foca", "description": "Begin Coded Font"},
+    # {"type": "BCP", "code": "D3A887", "value": b"\xd3\xa8\x87", "architecture": "foca", "description": "Begin Code Page"},
+    # {"type": "BFN", "code": "D3A889", "value": b"\xd3\xa8\x89", "architecture": "foca", "description": "Begin Font"},
+    # {"type": "CFC", "code": "D3A78A", "value": b"\xd3\xa7\x8a", "architecture": "foca", "description": "Coded Font Control"},
+    # {"type": "CFI", "code": "D38C8A", "value": b"\xd3\x8C\x8a", "architecture": "foca", "description": "Coded Font Index"},
+    # {"type": "CPC", "code": "D3A787", "value": b"\xd3\xa7\x87", "architecture": "foca", "description": "Code Page Control"},
+    # {"type": "CPD", "code": "D3A687", "value": b"\xd3\xa6\x87", "architecture": "foca", "description": "Code Page Descriptor"},
+    # {"type": "CPI", "code": "D38C87", "value": b"\xd3\x8C\x87", "architecture": "foca", "description": "Code Page Index"},
+    # {"type": "ECF", "code": "D3A98A", "value": b"\xd3\xa9\x8a", "architecture": "foca", "description": "End Coded Font"},
+    # {"type": "ECP", "code": "D3A987", "value": b"\xd3\xa9\x87", "architecture": "foca", "description": "End Code Page"},
+    # {"type": "EFN", "code": "D3A989", "value": b"\xd3\xa9\x89", "architecture": "foca", "description": "End Font"},
+    # {"type": "FNC", "code": "D3A789", "value": b"\xd3\xa7\x89", "architecture": "foca", "description": "Font Control"},
+    # {"type": "FND", "code": "D3A689", "value": b"\xd3\xa6\x89", "architecture": "foca", "description": "Font Descriptor"},
+    # {"type": "FNG", "code": "D3EE89", "value": b"\xd3\xee\x89", "architecture": "foca", "description": "Font Patterns"},
+    # {"type": "FNI", "code": "D38C89", "value": b"\xd3\x8c\x89", "architecture": "foca", "description": "Font Index"},
+    # {"type": "FNM", "code": "D3A289", "value": b"\xd3\xa2\x89", "architecture": "foca", "description": "Font Patterns Map"},
+    # {"type": "FNN", "code": "D3AB89", "value": b"\xd3\xab\x89", "architecture": "foca", "description": "Font Name Map"},
+    # {"type": "FNO", "code": "D3AE89", "value": b"\xd3\xae\x89", "architecture": "foca", "description": "Font Orientation"},
+    # {"type": "FNP", "code": "D3AC89", "value": b"\xd3\xac\x89", "architecture": "foca", "description": "Font Position"},
+    # {"type": "GAD", "code": "D3EEBB", "value": b"\xd3\xee\xbb", "architecture": "goca", "description": "Graphics Data"},
+    # {"type": "GDD", "code": "D3A6BB", "value": b"\xd3\xa6\xbb", "architecture": "goca", "description": "Graphics Data Descriptor"},
+    # {"type": "IDD", "code": "D3A6FB", "value": b"\xd3\xa6\xfb", "architecture": "ioca", "description": "Image Data Descriptor"},
+    # {"type": "IPD", "code": "D3EEFB", "value": b"\xd3\xee\xfb", "architecture": "ioca", "description": "Image Picture Data"},
+    # {"type": "BDA", "code": "D3EEEB", "value": b"\xd3\xee\xeb", "architecture": "bcoca", "description": "Bar Code Data"},
+    # {"type": "BDD", "code": "D3A6EB", "value": b"\xd3\xa6\xeb", "architecture": "bcoca", "description": "Bar Code Data Descriptor"},
     ]
 
 # Setup afp record type lookup.
@@ -126,10 +132,20 @@ afp_record_types = [
 #    afp_rec_type[xint][yint] = afp_record_type
 #    #afp_rec_type[afp_record_type["value"][1:2]][afp_record_type["value"][2:3]] = afp_record_type
 #    #wrk_str.encode("hex") and wrk_str.decode("hex") 
+
 afp_rec_type = {}
+afp_rec_type_text = {}
 for afp_record_type in afp_record_types:
+    if afp_record_type["type"] == "BCF":
+        pause = True
+    rec_type_class_file = f'afp_{afp_record_type["type"].lower()}_rec'
+    rec_type_class_name = f'AFP_{afp_record_type["type"]}'
+    exec(f'import {rec_type_class_file}')
+    exec(f'afp_record_type["module"] = {rec_type_class_file}')
+    exec(f'afp_record_type["class"] = {rec_type_class_file}.{rec_type_class_name}')
     #afp_rec_type[afp_record_type["code"]] = afp_record_type
     afp_rec_type[afp_record_type["value"]] = afp_record_type
+    afp_rec_type_text[afp_record_type["type"]] = afp_record_type
 
 afp_ptx_record_functions = [
     {"type": "AMB", "value": b"\xD2", "chained": False, "description": "Absolute Move Baseline"},
@@ -195,4 +211,11 @@ class StreamAFP:
     """ Code functions of afp printstream files. """
 
     def __init__(self):
+        pass
+
+    def output_start(self, file_path):
+        """ Create an output file.
+
+        :param str file_path: Output file path
+        """
         pass

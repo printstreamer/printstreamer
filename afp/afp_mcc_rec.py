@@ -18,7 +18,10 @@ for field in afp_mcc_fields_list:
 
 class AFP_MCC:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.Startnum = None            #      0       2  UBIN  n         X'06'      1-32386               Starting copy number
         self.Stopnum = None             #      2       2  UBIN  n         X'06'      1-32640               Ending copy number
@@ -31,7 +34,8 @@ class AFP_MCC:
 
         :param bytes data: Record data
         """
-        self.Startnum, self.Stopnum, self.Reserved_1, self.MMCid = unpack(f">HH1s1s", data)
+        pass
+        # self.Startnum, self.Stopnum, self.Reserved_1, self.MMCid = unpack(f">HH1s1s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

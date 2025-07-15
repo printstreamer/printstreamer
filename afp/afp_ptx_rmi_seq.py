@@ -16,7 +16,10 @@ for field in afp_ptx_rmi_fields_list:
 
 class AFP_PTX_RMI(AFPClass):
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Range:        Meaning:                  Optional: Def: Ind:
         self.INCRMENT = None            #      0       2  SBIN  X'8000' -     Increment                        y    n    n
 

@@ -16,7 +16,10 @@ for field in afp_boc_fields_list:
 
 class AFP_BOC:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.ObjCName = None            #      0       8  CHAR  n         X'06'                            Name of the object container
         self.Triplets = None            #      8   32753        y         X'14'                            See "BOC Semantics" for
@@ -27,7 +30,8 @@ class AFP_BOC:
 
         :param bytes data: Record data
         """
-        self.ObjCName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
+        pass
+        # self.ObjCName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

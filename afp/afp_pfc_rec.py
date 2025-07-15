@@ -18,7 +18,10 @@ for field in afp_pfc_fields_list:
 
 class AFP_PFC:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.Reserved_1 = None          #      0       1        n         X'06'                            Reserved; must be zero
         self.PFCFlgs = None             #      1       1  BITS  n         X'06'                            Flags
@@ -31,7 +34,8 @@ class AFP_PFC:
 
         :param bytes data: Record data
         """
-        self.Reserved_1, self.PFCFlgs, self.Reserved_2, self.Triplets = unpack(f">1s1s2s{self.Triplets.len()}s", data)
+        pass
+        # self.Reserved_1, self.PFCFlgs, self.Reserved_2, self.Triplets = unpack(f">1s1s2s{self.Triplets.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

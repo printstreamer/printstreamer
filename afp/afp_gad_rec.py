@@ -15,7 +15,10 @@ for field in afp_gad_fields_list:
 
 class AFP_GAD:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.GOCAdat = None             #      0       8  UNDF  y         X'00'                            Up to 32759 bytes of
                                         #                                                                  GOCA-defined data
@@ -25,7 +28,8 @@ class AFP_GAD:
 
         :param bytes data: Record data
         """
-        self.GOCAdat = unpack(f">8s", data)
+        pass
+        # self.GOCAdat = unpack(f">8s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

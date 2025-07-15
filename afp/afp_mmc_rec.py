@@ -17,7 +17,10 @@ for field in afp_mmc_fields_list:
 
 class AFP_MMC:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.MMCid = None               #      0       1  CODE  y         X'06'      1-127                 Medium Modification Control
                                         #                                                                  identifier
@@ -29,7 +32,8 @@ class AFP_MMC:
 
         :param bytes data: Record data
         """
-        self.MMCid, self.Constant, self.Keywords = unpack(f">1s1s{self.Keywords.len()}s", data)
+        pass
+        # self.MMCid, self.Constant, self.Keywords = unpack(f">1s1s{self.Keywords.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

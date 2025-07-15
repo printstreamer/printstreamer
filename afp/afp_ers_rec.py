@@ -15,7 +15,10 @@ for field in afp_ers_fields_list:
 
 class AFP_ERS:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.RSName = None              #      0       8  CHAR  y         X'02'                            Name of the resource
 
@@ -24,7 +27,8 @@ class AFP_ERS:
 
         :param bytes data: Record data
         """
-        self.RSName = unpack(f">8s", data)
+        pass
+        # self.RSName = unpack(f">8s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

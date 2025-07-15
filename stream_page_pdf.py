@@ -14,6 +14,8 @@ class StreamPagePDF:
         self.text = []
         self.images = []
         self.attributes = {}
+        self.width = 612
+        self.height = 792
 
     def parse(self):
         """ Parse a pdf printstream page. """

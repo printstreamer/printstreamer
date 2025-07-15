@@ -15,7 +15,10 @@ for field in afp_ipd_fields_list:
 
 class AFP_IPD:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.IOCAdat = None             #      0   32761  UNDF  y         X'00'                            Up to 32759 bytes of IOCA
                                         #                                                                  defined data
@@ -25,7 +28,8 @@ class AFP_IPD:
 
         :param bytes data: Record data
         """
-        self.IOCAdat = unpack(f">{self.IOCAdat.len()}s", data)
+        pass
+        # self.IOCAdat = unpack(f">{self.IOCAdat.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

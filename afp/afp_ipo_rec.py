@@ -19,7 +19,10 @@ for field in afp_ipo_fields_list:
 
 class AFP_IPO:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.OvlyName = None            #      0       8  CHAR  n         X'06'                            Name of the overlay resource
         self.XolOset = None             #      8       3  SBIN  y         X'06'      -32768-32767          X-axis origin for the page
@@ -48,7 +51,8 @@ class AFP_IPO:
 
         :param bytes data: Record data
         """
-        self.OvlyName, self.XolOset, self.YolOset, self.OvlyOrent, self.Triplets = unpack(f">8sxhxh2s{self.Triplets.len()}s", data)
+        pass
+        # self.OvlyName, self.XolOset, self.YolOset, self.OvlyOrent, self.Triplets = unpack(f">8sxhxh2s{self.Triplets.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

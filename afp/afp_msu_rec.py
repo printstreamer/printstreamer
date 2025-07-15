@@ -17,7 +17,10 @@ for field in afp_msu_fields_list:
 
 class AFP_MSU:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.SUPname = None             #      0       8  CHAR  y         X'06'                            External name of text
                                         #                                                                  suppression
@@ -30,7 +33,8 @@ class AFP_MSU:
 
         :param bytes data: Record data
         """
-        self.SUPname, self.Reserved_1, self.SUPid = unpack(f">8s1s1s", data)
+        pass
+        # self.SUPname, self.Reserved_1, self.SUPid = unpack(f">8s1s1s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

@@ -11,21 +11,27 @@ def analyze(step):
     """ Analyze process.
 
     :param step: Process step
+    :returns: stream_parser
     """
     # Set up for processing.
     stream_parser = StreamParser()
-    # Add the input file(s) to the parser as files.
+    # Add the file(s) to the parser as input or output files.
     for file in step.getElementsByTagName("file"):
-        if file.getAttribute("type") == "input":
-            name = file.getAttribute('name')
-            if file.hasAttribute('file_type'):
-                file_type = file.getAttribute('file_type')
-            else:
-                file_type = None
-            print(f"processing input file:  {name}")
-            stream_parser.add_file(stream_parser, name, file_type=file_type)
+        name = file.getAttribute('name')
+        if file.hasAttribute('file_type'):
+            file_type = file.getAttribute('file_type')
+        else:
+            file_type = None
+        if file.hasAttribute('type'):
+            type = file.getAttribute('type')
+        else:
+            type = None
+        print(f"processing {type} {file_type} file:  {name}")
+        stream_parser.add_file(stream_parser, name, file_type=file_type, type=type)
     # Parse printstream files.
     stream_parser.parse()
+    # Return the parser.
+    return stream_parser
 
 
 if __name__ == "__main__":
@@ -57,8 +63,7 @@ if __name__ == "__main__":
             stopping = True
         if started and not stopped:
             print(f"Processing step:  {step_name}")
-            if step_name == "analyze":
-                analyze(process_step)
+            parser = analyze(process_step)
 
     #  End script.
     sys.exit(0)

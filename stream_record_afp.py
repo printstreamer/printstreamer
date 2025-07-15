@@ -1,6 +1,8 @@
 """ Parse a printstream file record. """
 
-from afp_ptx_rec import AFP_PTX
+#from afp_bpg_rec import AFP_BPG
+#from afp_ptx_rec import AFP_PTX
+from stream_afp import afp_rec_type_text
 
 
 class StreamRecordAFP:
@@ -18,6 +20,5 @@ class StreamRecordAFP:
         start = 9
         length = self.length - start
         data = self.data[start:length]
-        if self.type == "PTX":
-            ptx = AFP_PTX(self.segment)
-            ptx.parse(data)
+        rec = afp_rec_type_text[self.type]["class"](self.segment)
+        rec.parse(data)

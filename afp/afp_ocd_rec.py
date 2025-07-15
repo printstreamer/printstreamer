@@ -15,7 +15,10 @@ for field in afp_ocd_fields_list:
 
 class AFP_OCD:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.ObjCdat = None             #      0   32761  UNDF  y         X'00'                            Up to 32,759 bytes of object
                                         #                                                                  data
@@ -25,7 +28,8 @@ class AFP_OCD:
 
         :param bytes data: Record data
         """
-        self.ObjCdat = unpack(f">{self.ObjCdat.len()}s", data)
+        pass
+        # self.ObjCdat = unpack(f">{self.ObjCdat.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

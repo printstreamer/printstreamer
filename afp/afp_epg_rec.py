@@ -16,7 +16,10 @@ for field in afp_epg_fields_list:
 
 class AFP_EPG:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.PageName = None            #      0       8  CHAR  y         X'02'                            Name of the page
         self.Triplets = None            #      8   32753        y         X'10'                            See "EPG Semantics" for
@@ -27,7 +30,8 @@ class AFP_EPG:
 
         :param bytes data: Record data
         """
-        self.PageName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
+        pass
+        # self.PageName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

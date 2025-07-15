@@ -19,7 +19,10 @@ for field in afp_mfc_fields_list:
 
 class AFP_MFC:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.MFCFlgs = None             #      0       1  BITS  y         X'06'                            See "MFC Semantics" on page
                                         #                                                                  238 for the MFCFlgs
@@ -47,7 +50,8 @@ class AFP_MFC:
 
         :param bytes data: Record data
         """
-        self.MFCFlgs, self.Reserved_1, self.MedColl, self.MFCScpe, self.Triplets = unpack(f">1s1s1s1s{self.Triplets.len()}s", data)
+        pass
+        # self.MFCFlgs, self.Reserved_1, self.MedColl, self.MFCScpe, self.Triplets = unpack(f">1s1s1s1s{self.Triplets.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

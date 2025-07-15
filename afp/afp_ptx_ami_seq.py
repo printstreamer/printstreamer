@@ -16,7 +16,10 @@ for field in afp_ptx_ami_fields_list:
 
 class AFP_PTX_AMI(AFPClass):
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Range:        Meaning:                  Optional: Def: Ind:
         self.DSPLCMNT = None            #      0       2  SBIN  X'0000' -     Displacement                     y    n    n
 

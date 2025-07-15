@@ -9,20 +9,25 @@ from stream_segment_pdf import StreamSegmentPDF
 class StreamFile:
     """ Manage the parsing of segments of a printstream file. """
     
-    def __init__(self, parser, name, file_type=None):
+    def __init__(self, parser, name, file_type=None, type="input"):
         self.parser = parser
         self.name = name
         self.file_type = file_type
+        self.type = type
         self.documents = 0
         self.pages = 0
         self.records = 0
-        self.bytes = os.path.getsize(name)
         self.segments = []
+        if type == "input":
+            self.bytes = os.path.getsize(name)
+        else:
+            self.bytes = 0
         # Single-segment processing until multithreading of concurrent segments is implemented.
         if self.file_type == "afp":
             self.add_segment(self, 1, start_byte_offset=0, end_byte_offset=self.bytes)
         elif self.file_type == "pdf":
             self.add_segment(self, 1, start_page_offset=0)
+        self.cur_segment = self.segments[0]
 
     def add_segment(self, file, key, start_byte_offset=None, end_byte_offset=None, start_page_offset=None, end_page_offset=None):
         """ Add a parsing segment to the parser segment list.
@@ -54,7 +59,7 @@ class StreamFile:
         for segment in self.segments:
             segment.parse()
         # Report.
-        print(f"\nInput file name:  {self.name}")
+        print(f"\n{self.type.title()} file name:  {self.name}")
         print(f"  Type:             {self.file_type}")
         print(f"  Documents:        {self.documents}")
         print(f"  Pages:            {self.pages}")

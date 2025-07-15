@@ -17,7 +17,10 @@ for field in afp_brs_fields_list:
 
 class AFP_BRS:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.RSName = None              #      0       8  CHAR  n         X'02'                            Identifier of the resource
         self.Reserved_1 = None          #      8       2        n         X'06'                            
@@ -28,7 +31,8 @@ class AFP_BRS:
 
         :param bytes data: Record data
         """
-        self.RSName, self.Reserved_1, self.Reserved_2 = unpack(f">8s2s{self.Reserved_2.len()}s", data)
+        pass
+        # self.RSName, self.Reserved_1, self.Reserved_2 = unpack(f">8s2s{self.Reserved_2.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

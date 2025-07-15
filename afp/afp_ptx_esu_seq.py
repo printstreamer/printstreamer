@@ -16,7 +16,10 @@ for field in afp_ptx_esu_fields_list:
 
 class AFP_PTX_ESU(AFPClass):
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Range:        Meaning:                  Optional: Def: Ind:
         self.LID = None                 #      0       1  CODE  X'00' -       Suppression identifier           n    n    n
 
@@ -25,7 +28,8 @@ class AFP_PTX_ESU(AFPClass):
 
         :param bytes data: Record data
         """
-        self.LID = unpack(f">1s", data)
+        pass
+        # self.LID = unpack(f">1s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

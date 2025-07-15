@@ -17,7 +17,10 @@ for field in afp_bdt_fields_list:
 
 class AFP_BDT:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.DocName = None             #      0       8  CHAR  y         '06'                             Name of the document
         self.Reserved_1 = None          #      8       2        y         '06'                             Reserved; must be binary zero
@@ -29,7 +32,9 @@ class AFP_BDT:
 
         :param bytes data: Record data
         """
-        self.DocName, self.Reserved_1, self.Triplets = unpack(f">8s2s{self.Triplets.len()}s", data)
+        pass
+        # pass
+        # self.DocName, self.Reserved_1, self.Triplets = unpack(f">8s2s{self.Triplets.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

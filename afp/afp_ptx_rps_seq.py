@@ -17,7 +17,10 @@ for field in afp_ptx_rps_fields_list:
 
 class AFP_PTX_RPS(AFPClass):
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Range:        Meaning:                  Optional: Def: Ind:
         self.RLENGTH = None             #      0       2  UBIN  0-32767       Repeat length                    y    n    n
         self.RPTDATA = None             #      2     251  CHAR  Not           Repeated data                    y    n    n
@@ -27,7 +30,8 @@ class AFP_PTX_RPS(AFPClass):
 
         :param bytes data: Record data
         """
-        self.RLENGTH, self.RPTDATA = unpack(f">H{len(data)}s", data)
+        pass
+        # self.RLENGTH, self.RPTDATA = unpack(f">H{len(data)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

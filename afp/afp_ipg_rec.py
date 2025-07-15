@@ -18,7 +18,10 @@ for field in afp_ipg_fields_list:
 
 class AFP_IPG:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.PgName = None              #      0       8  CHAR  n         X'06'                            Name of the page
         self.Reserved_1 = None          #      8       8        n         X'06'                            Reserved; must be zero
@@ -33,7 +36,8 @@ class AFP_IPG:
 
         :param bytes data: Record data
         """
-        self.PgName, self.Reserved_1, self.IPgFlgs, self.Triplets = unpack(f">8s8s1s{self.Triplets.len()}s", data)
+        pass
+        # self.PgName, self.Reserved_1, self.IPgFlgs, self.Triplets = unpack(f">8s8s1s{self.Triplets.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

@@ -17,7 +17,10 @@ for field in afp_ptx_sia_fields_list:
 
 class AFP_PTX_SIA(AFPClass):
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Range:        Meaning:                  Optional: Def: Ind:
         self.ADJSTMNT = None            #      0       2  SBIN  X'0000' -     Adjustment                       n    y    y
         self.DIRCTION = None            #      2       1  CODE  X'00' -       Direction                        y    y    y
@@ -27,7 +30,8 @@ class AFP_PTX_SIA(AFPClass):
 
         :param bytes data: Record data
         """
-        self.ADJSTMNT, self.DIRCTION = unpack(f">h1s", data)
+        pass
+        # self.ADJSTMNT, self.DIRCTION = unpack(f">h1s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

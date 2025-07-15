@@ -17,7 +17,10 @@ for field in afp_pmc_fields_list:
 
 class AFP_PMC:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.PMCid = None               #      0       1  CODE  y         X'06'      0-127                 Page Modification Control
                                         #                                                                  identifier
@@ -30,7 +33,8 @@ class AFP_PMC:
 
         :param bytes data: Record data
         """
-        self.PMCid, self.Reserved_1, self.Triplets = unpack(f">1s1s{self.Triplets.len()}s", data)
+        pass
+        # self.PMCid, self.Reserved_1, self.Triplets = unpack(f">1s1s{self.Triplets.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

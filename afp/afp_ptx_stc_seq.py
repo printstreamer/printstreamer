@@ -17,7 +17,10 @@ for field in afp_ptx_stc_fields_list:
 
 class AFP_PTX_STC(AFPClass):
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Range:        Meaning:                  Optional: Def: Ind:
         self.FRGCOLOR = None            #      0       2  CODE                Foreground color                 y    y    y
         self.PRECSION = None            #      2       1  BITS  X'00' -       Precision                        y    y    y
@@ -27,7 +30,8 @@ class AFP_PTX_STC(AFPClass):
 
         :param bytes data: Record data
         """
-        self.FRGCOLOR, self.PRECSION = unpack(f">2s1s", data)
+        pass
+        # self.FRGCOLOR, self.PRECSION = unpack(f">2s1s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

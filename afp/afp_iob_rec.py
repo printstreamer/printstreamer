@@ -25,7 +25,10 @@ for field in afp_iob_fields_list:
 
 class AFP_IOB:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.ObjName = None             #      0       8  CHAR  n         X'06'                            Name of the object
         self.Reserved_1 = None          #      8       1        n         X'06'                            Reserved; must be zero
@@ -90,7 +93,8 @@ class AFP_IOB:
 
         :param bytes data: Record data
         """
-        self.ObjName, self.Reserved_1, self.ObjType, self.XoaOset, self.YoaOset, self.XoaOrent, self.YoaOrent, self.XocaOset, self.YocaOset, self.RefCSys, self.Triplets = unpack(f">8s1s1sxhxh2s2sxhxh1s{self.Triplets.len()}s", data)
+        pass
+        # self.ObjName, self.Reserved_1, self.ObjType, self.XoaOset, self.YoaOset, self.XoaOrent, self.YoaOrent, self.XocaOset, self.YocaOset, self.RefCSys, self.Triplets = unpack(f">8s1s1sxhxh2s2sxhxh1s{self.Triplets.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

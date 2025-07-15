@@ -26,7 +26,10 @@ for field in afp_obp_fields_list:
 
 class AFP_OBP:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.OAPosID = None             #      0       1  CODE  y         X'06'      X'01'-X'7F'           The object area position
                                         #                                                                  identifier
@@ -83,7 +86,8 @@ class AFP_OBP:
 
         :param bytes data: Record data
         """
-        self.OAPosID, self.RGLength, self.XoaOset, self.YoaOset, self.XoaOrent, self.YoaOrent, self.Reserved_1, self.XocaOset, self.YocaOset, self.XocaOrent, self.YocaOrent, self.RefCSys = unpack(f">1sBxhxh2s2s1sxhxh2s2s1s", data)
+        pass
+        # self.OAPosID, self.RGLength, self.XoaOset, self.YoaOset, self.XoaOrent, self.YoaOrent, self.Reserved_1, self.XocaOset, self.YocaOset, self.XocaOrent, self.YocaOrent, self.RefCSys = unpack(f">1sBxhxh2s2s1sxhxh2s2s1s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

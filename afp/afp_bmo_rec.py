@@ -16,7 +16,10 @@ for field in afp_bmo_fields_list:
 
 class AFP_BMO:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.OvlyName = None            #      0       8  CHAR  y         '06'                             Name of the overlay
         self.Triplets = None            #      8   32753        y         '10'                             See "BMO Semantics" for
@@ -27,7 +30,8 @@ class AFP_BMO:
 
         :param bytes data: Record data
         """
-        self.OvlyName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
+        pass
+        # self.OvlyName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

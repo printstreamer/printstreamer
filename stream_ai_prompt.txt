@@ -1,0 +1,4 @@
+Create a python 3.13 application that can parse AFP input files, parsing and returning every data field from every record type, including all text and font information, lines, graphics, barcodes, and images.  Store this information in memory a page at a time.  Enable transformation of each page to an output pdf file, including all text and font information, lines, graphics, barcodes, and images.
+
+
+Create a python 3.13 application that can parse AFP and PDF input files,

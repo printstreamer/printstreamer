@@ -20,7 +20,10 @@ for field in afp_mmo_fields_list:
 
 class AFP_MMO:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.RGLength = None            #      0       1  UBIN  y         X'06'      X'0C'                 Length of each repeating
                                         #                                                                  group
@@ -37,7 +40,8 @@ class AFP_MMO:
 
         :param bytes data: Record data
         """
-        self.RGLength, self.Reserved_1, self.OVLid, self.Flags, self.Reserved_2, self.OVLname = unpack(f">B3sB1s2s8s", data)
+        pass
+        # self.RGLength, self.Reserved_1, self.OVLid, self.Flags, self.Reserved_2, self.OVLname = unpack(f">B3sB1s2s8s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

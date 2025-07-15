@@ -16,7 +16,10 @@ for field in afp_bps_fields_list:
 
 class AFP_BPS:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.PsegName = None            #      0       8  CHAR  n         X'06'                            Name of the page segment
         self.Triplets = None            #      8   32753        y         X'10'                            See "BPS Semantics" for triplet
@@ -27,7 +30,8 @@ class AFP_BPS:
 
         :param bytes data: Record data
         """
-        self.PsegName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
+        pass
+        # self.PsegName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

@@ -4,7 +4,7 @@ import fitz  # PyMuPDF
 import os
 from PIL import Image
 from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4, LETTER, LEGAL, ELEVENSEVENTEEN, letter
 from reportlab.lib.utils import ImageReader
 
 
@@ -14,6 +14,7 @@ def decode_color(color_int):
     g = (color_int >> 8) & 255
     b = color_int & 255
     return '#{:02X}{:02X}{:02X}'.format(r, g, b)
+
 
 def extract_pdf_content(input_pdf_path, output_dir="extracted"):
     # os.makedirs(output_dir, exist_ok=True)
@@ -42,9 +43,10 @@ def extract_pdf_content(input_pdf_path, output_dir="extracted"):
     doc.close()
     return extracted
 
+
 def create_pdf_from_content(output_pdf_path, content):
-    c = canvas.Canvas(output_pdf_path, pagesize=A4)
-    width, height = A4
+    c = canvas.Canvas(output_pdf_path, pagesize=letter)
+    width, height = letter
     for item in content:
         text = item["text"]
         images = item["images"]

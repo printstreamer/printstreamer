@@ -17,6 +17,7 @@ class StreamSegmentAFP:
         self.parser = self.file.parser
         self.name = self.file.name
         self.file_type = self.file.file_type
+        self.type = self.file.type
         self.key = key
         self.start_byte_offset = start_byte_offset
         self.end_byte_offset = end_byte_offset
@@ -26,6 +27,7 @@ class StreamSegmentAFP:
         self.bytes = self.end_byte_offset - self.start_byte_offset
         self.cur_page = None
         self.cur_document = None
+        self.initialized = False
 
     def parse(self):
         """ Parse a file segment. """
@@ -63,6 +65,7 @@ class StreamSegmentAFP:
                 elif cur_rec.type == "EPG":
                     pause = True
                     print(self.cur_page.text)
+                    self.file.parser.output_page(self.cur_page)
                 cur_rec.parse()
                 self.records += 1
             else:
@@ -73,11 +76,33 @@ class StreamSegmentAFP:
         self.file.records += self.records
         # Close files.
         input_file.close()
-        # Report.
-        print(f"\nInput file name:  {self.name}")
-        print(f"  Type:             {self.file_type}")
-        print(f"  Segment:          {self.key}")
-        print(f"  Documents:        {self.documents}")
-        print(f"  Pages:            {self.pages}")
-        print(f"  Records:          {self.records}")
-        print(f"  Bytes:            {self.bytes}")
+        # # Report.
+        # print(f"\n{self.type.title()} file name:  {self.name}")
+        # print(f"  Type:             {self.file_type}")
+        # print(f"  Segment:          {self.key}")
+        # print(f"  Documents:        {self.documents}")
+        # print(f"  Pages:            {self.pages}")
+        # print(f"  Records:          {self.records}")
+        # print(f"  Bytes:            {self.bytes}")
+
+    def output_start(self):
+        """ Start an output file. """
+        pass
+
+    def output_document(self, document):
+        """ Output a document.
+
+        :param document: Document to output
+        """
+        pass
+
+    def output_page(self, page):
+        """ Output a page.
+
+        :param page: Page to output
+        """
+        pass
+
+    def output_end(self):
+        """ End an output file. """
+        pass

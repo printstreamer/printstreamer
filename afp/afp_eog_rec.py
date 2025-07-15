@@ -15,7 +15,10 @@ for field in afp_eog_fields_list:
 
 class AFP_EOG:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.OEGName = None             #      0       8  CHAR  y         X'02'                            Name of the object
                                         #                                                                  environment group
@@ -25,7 +28,8 @@ class AFP_EOG:
 
         :param bytes data: Record data
         """
-        self.OEGName = unpack(f">8s", data)
+        pass
+        # self.OEGName = unpack(f">8s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

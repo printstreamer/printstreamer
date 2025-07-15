@@ -12,6 +12,8 @@ class StreamPageAFP:
         self.text = []
         self.images = []
         self.attributes = {}
+        self.width = 612
+        self.height = 792
 
     def parse(self):
         """ Parse an afp printstream page. """

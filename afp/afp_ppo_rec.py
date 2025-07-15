@@ -21,7 +21,10 @@ for field in afp_ppo_fields_list:
 
 class AFP_PPO:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.RGLength = None            #      0       2  UBIN  n         X'06'      18-(n+1)              Total length of this repeating
         self.ObjType = None             #      2       1  CODE  n         X'06'      X'92', X'DF', X'FB'   Object type:
@@ -36,7 +39,8 @@ class AFP_PPO:
 
         :param bytes data: Record data
         """
-        self.RGLength, self.ObjType, self.Reserved_1, self.ObjOrent, self.XocaOset, self.YocaOset, self.Reserved_2 = unpack(f">H1s2s1sxhxh{self.Reserved_2.len()}s", data)
+        pass
+        # self.RGLength, self.ObjType, self.Reserved_1, self.ObjOrent, self.XocaOset, self.YocaOset, self.Reserved_2 = unpack(f">H1s2s1sxhxh{self.Reserved_2.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

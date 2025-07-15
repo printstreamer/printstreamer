@@ -15,7 +15,10 @@ for field in afp_ptx_bln_fields_list:
 
 class AFP_PTX_BLN(AFPClass):
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Range:        Meaning:                  Optional: Def: Ind:
         pass
 
@@ -25,6 +28,7 @@ class AFP_PTX_BLN(AFPClass):
         :param bytes data: Record data
         """
         pass
+        # pass
 
     def format(self):
         """ Format the data from the record class fields into a record.

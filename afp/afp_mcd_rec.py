@@ -16,7 +16,10 @@ for field in afp_mcd_fields_list:
 
 class AFP_MCD:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.RGLength = None            #      0       2  UBIN  y         X'06'      5                     Total length of this repeating
                                         #                                                                  group
@@ -27,7 +30,8 @@ class AFP_MCD:
 
         :param bytes data: Record data
         """
-        self.RGLength, self.Triplets = unpack(f">H{self.Triplets.len()}s", data)
+        pass
+        # self.RGLength, self.Triplets = unpack(f">H{self.Triplets.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

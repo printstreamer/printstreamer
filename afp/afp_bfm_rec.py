@@ -16,7 +16,10 @@ for field in afp_bfm_fields_list:
 
 class AFP_BFM:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.FMName = None              #      0       8  CHAR  y         X'02'                            Name of the form map
         self.Triplets = None            #      8   32753        y         X'10'                            See "BFM Semantics" for
@@ -27,7 +30,8 @@ class AFP_BFM:
 
         :param bytes data: Record data
         """
-        self.FMName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
+        pass
+        # self.FMName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

@@ -16,7 +16,10 @@ for field in afp_ptx_sbi_fields_list:
 
 class AFP_PTX_SBI(AFPClass):
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Range:        Meaning:                  Optional: Def: Ind:
         self.INCRMENT = None            #      0       2  SBIN  X'0000' -     Increment                        y    y    y
 
@@ -25,7 +28,8 @@ class AFP_PTX_SBI(AFPClass):
 
         :param bytes data: Record data
         """
-        self.INCRMENT = unpack(f">h", data)
+        pass
+        # self.INCRMENT = unpack(f">h", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

@@ -16,7 +16,10 @@ for field in afp_bpt_fields_list:
 
 class AFP_BPT:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.PTdoName = None            #      0       8  CHAR  y         X'02'                            Name of the presentation text
                                         #                                                                  data object
@@ -28,7 +31,8 @@ class AFP_BPT:
 
         :param bytes data: Record data
         """
-        self.PTdoName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
+        pass
+        # self.PTdoName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

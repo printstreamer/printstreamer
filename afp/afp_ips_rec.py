@@ -18,7 +18,10 @@ for field in afp_ips_fields_list:
 
 class AFP_IPS:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.PsegName = None            #      0       8  CHAR  y         X'06'                            Name of the page segment
                                         #                                                                  resource
@@ -36,7 +39,8 @@ class AFP_IPS:
 
         :param bytes data: Record data
         """
-        self.PsegName, self.XpsOset, self.YpsOset, self.Triplets = unpack(f">8sxhxh{self.Triplets.len()}s", data)
+        pass
+        # self.PsegName, self.XpsOset, self.YpsOset, self.Triplets = unpack(f">8sxhxh{self.Triplets.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

@@ -16,7 +16,10 @@ for field in afp_bca_fields_list:
 
 class AFP_BCA:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.CATName = None             #      0       8  CHAR  y         X'06'                            Name of the color attribute
                                         #                                                                  table
@@ -28,7 +31,8 @@ class AFP_BCA:
 
         :param bytes data: Record data
         """
-        self.CATName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
+        pass
+        # self.CATName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

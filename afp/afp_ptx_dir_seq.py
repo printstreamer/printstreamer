@@ -17,7 +17,10 @@ for field in afp_ptx_dir_fields_list:
 
 class AFP_PTX_DIR(AFPClass):
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Range:        Meaning:                  Optional: Def: Ind:
         self.RLENGTH = None             #      0       2  SBIN  X'8000' -     Length                           n    n    n
         self.RWIDTH = None              #      2       3  SBIN  See           Width                            y    y    y
@@ -27,7 +30,8 @@ class AFP_PTX_DIR(AFPClass):
 
         :param bytes data: Record data
         """
-        self.RLENGTH, self.RWIDTH = unpack(f">hxh", data)
+        pass
+        # self.RLENGTH, self.RWIDTH = unpack(f">hxh", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

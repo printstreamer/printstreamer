@@ -16,7 +16,10 @@ for field in afp_ptx_usc_fields_list:
 
 class AFP_PTX_USC(AFPClass):
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Range:        Meaning:                  Optional: Def: Ind:
         self.BYPSIDEN = None            #      0       1  BITS  See           Bypass identifiers               y    y    y
 
@@ -25,7 +28,8 @@ class AFP_PTX_USC(AFPClass):
 
         :param bytes data: Record data
         """
-        self.BYPSIDEN = unpack(f">1s", data)
+        pass
+        # self.BYPSIDEN = unpack(f">1s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

@@ -15,7 +15,10 @@ for field in afp_gdd_fields_list:
 
 class AFP_GDD:
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Optional: Exception: Range:                Meaning:
         self.GOCAdes = None             #      0   32761  UNDF  y         X'00'                            Up to 32759 bytes of
                                         #                                                                  GOCA-defined descriptor data
@@ -25,7 +28,8 @@ class AFP_GDD:
 
         :param bytes data: Record data
         """
-        self.GOCAdes = unpack(f">{self.GOCAdes.len()}s", data)
+        pass
+        # self.GOCAdes = unpack(f">{self.GOCAdes.len()}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

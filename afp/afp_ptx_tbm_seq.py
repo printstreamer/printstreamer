@@ -18,7 +18,10 @@ for field in afp_ptx_tbm_fields_list:
 
 class AFP_PTX_TBM(AFPClass):
 
-    def __init__(self):
+    def __init__(self, segment):
+        self.segment = segment
+        self.document = self.segment.cur_document
+        self.page = self.segment.cur_page
                                         # Offset: Length: Type: Range:        Meaning:                  Optional: Def: Ind:
         self.DIRCTION = None            #      0       1  CODE  X'00' -       Direction                        y    y    y
         self.PRECSION = None            #      1       1  BITS  X'00' -       Precision                        y    y    y
@@ -29,7 +32,8 @@ class AFP_PTX_TBM(AFPClass):
 
         :param bytes data: Record data
         """
-        self.DIRCTION, self.PRECSION, self.INCRMENT = unpack(f">1s1sh", data)
+        pass
+        # passself.DIRCTION, self.PRECSION, self.INCRMENT = unpack(f">1s1sh", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
