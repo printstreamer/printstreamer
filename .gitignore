@@ -1,3 +1,6 @@
+# Data working directory (samples, generated outputs, indexes — not tracked)
+data/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -1,0 +1,45 @@
+$$$ ----------------------------------------------------------------------------
+$$$ metacode.jsl - Job Source Library (JSL) for Xerox LCDS / Metacode processing.
+$$$
+$$$ A JSL is compiled into a Job Descriptor Library (JDL); it defines the print
+$$$ environment that a Metacode/LCDS data stream relies on: the DJDE prefix and
+$$$ scanning rules (IDEN), page geometry and font set (PDE), the carriage-control
+$$$ table (VFU), and one or more Job Descriptor Entries (JDE). Because Metacode
+$$$ records carry no self-describing geometry, these settings are REQUIRED to parse
+$$$ or generate a stream faithfully - the same JSL must be used on both sides.
+$$$
+$$$ This is a representative JSL reconstructed from the public Xerox PDL/DJDE
+$$$ references (Xerox LPS "PDL/DJDE Reference", e.g. 720P94090 / LPS4050-4090; and the
+$$$ comp.sys.xerox DJDE specification). A standalone downloadable .jsl is not
+$$$ published, so it is modelled on those documented grammars and a real DJDE record:
+$$$   $DJDE$ JDE=ONLINE,JDL=ONLINE,DATA=(1,200),FONTINDEX=(0,L0112,1),
+$$$   $DJDE$ FORM=FORM01,FORMAT=FORM01,END;
+$$$ ----------------------------------------------------------------------------
+
+ONLINE: JDL;
+
+$$$ -- ID / system level -------------------------------------------------------
+        VOLUME  MOUNT=01;
+        SYSTEM  PFFORMAT=NONE;
+
+$$$ -- IDEN: how DJDE records are recognized in the data stream -----------------
+$$$    PREFIX  the literal that flags a DJDE record ($DJDE$)
+$$$    OFFSET  bytes before the prefix is expected (carriage control + skip)
+$$$    SKIP    bytes from start of record skipped before DJDE scanning
+        IDEN    PREFIX='$DJDE$',OFFSET=2,SKIP=9;
+
+$$$ -- PDE: page descriptor (geometry + font list, by index) -------------------
+$$$    ORG sets the page origin; PMODE the orientation; the FONTS list maps a
+$$$    1-based font index (used by FONTINDEX / the FONT order) to a font name.
+PDE01:  PDE     ORG=(0,0),PMODE=PORTRAIT,PAPERSIZE=(8.5,11.0),RESOLUTION=300;
+        FONTS   L0112,L0110,L0108,L0114;
+
+$$$ -- VFU: vertical format (carriage-control channel -> line) -----------------
+VFU01:  VFU     CHANNEL=(1,1),LPI=6;
+
+$$$ -- JDE: the job descriptor entry tying it together -------------------------
+ONLINE: JDE     PDE=PDE01,VFU=VFU01,BANNER=NONE,
+                FORMAT=FORM01,FONTS=(L0112,L0110,L0108,L0114),
+                ASSIGN=(GRAPHICS,YES);
+
+        END;

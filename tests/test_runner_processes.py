@@ -5,7 +5,6 @@ from xml.dom import minidom
 import fitz
 
 from process.runner import run_step
-from tests.conftest import AFP_SAMPLE
 
 
 def _step(xml):
@@ -17,7 +16,7 @@ def test_nup_process_runs(tmp_path):
     step = _step(
         f'<step name="nup" rows="2" cols="2" page-size="letter" rotate="90" '
         f'margin-top="18" margin-left="18">'
-        f'<file name="{AFP_SAMPLE}" file_type="afp" type="input"/>'
+        f'<file name="test_afp.afp" file_type="afp" type="input"/>'
         f'<file name="{out.as_posix()}" file_type="pdf" type="output"/></step>')
     run_step(step)
     assert out.exists()
@@ -33,7 +32,7 @@ def test_edit_process_runs(tmp_path):
     captured = tmp_path / "c.json"
     step = _step(
         f'<step name="edit" extract_to="{captured.as_posix()}">'
-        f'<file name="{AFP_SAMPLE}" file_type="afp" type="input"/>'
+        f'<file name="test_afp.afp" file_type="afp" type="input"/>'
         f'<file name="{out.as_posix()}" file_type="pdf" type="output"/>'
         f'<extract kind="text" window="0,0,612,72" field="heading"/>'
         f'<delete kind="image"/>'
@@ -49,7 +48,7 @@ def test_spec_driven_extract(tmp_path):
     idx = tmp_path / "out.idx"
     spec.write_text(
         f'<spec process="extract">'
-        f'<inputs><file name="{AFP_SAMPLE}" type="afp"/></inputs>'
+        f'<inputs><file name="test_afp.afp" type="afp"/></inputs>'
         f'<index name="{idx.as_posix()}" format="json"/>'
         f'<identify by="window" value="0,0,612,72"/>'
         f'<fields><field name="heading" window="0,0,612,72"/></fields></spec>',
@@ -64,7 +63,7 @@ def test_spec_driven_nup_booklet(tmp_path):
     out = tmp_path / "bk.pdf"
     spec.write_text(
         f'<spec process="nup">'
-        f'<inputs><file name="{AFP_SAMPLE}" type="afp"/></inputs>'
+        f'<inputs><file name="test_afp.afp" type="afp"/></inputs>'
         f'<outputs><file name="{out.as_posix()}" type="pdf"/></outputs>'
         f'<imposition page-width="792" page-height="612" rows="1" cols="2" group-size="4">'
         f'<cell row="0" col="0" page="n"/><cell row="0" col="1" page="1"/>'
@@ -89,7 +88,7 @@ def test_extract_then_merge_with_spec(tmp_path):
     out = tmp_path / "m.pdf"
     run_step(_step(
         f'<step name="extract" spec="{spec.as_posix()}" index="{idx.as_posix()}">'
-        f'<file name="{AFP_SAMPLE}" file_type="afp" type="input"/></step>'))
+        f'<file name="test_afp.afp" file_type="afp" type="input"/></step>'))
     assert idx.exists() and (tmp_path / "s.docs.idx").exists()
     run_step(_step(
         f'<step name="merge" spec="{spec.as_posix()}" index="{idx.as_posix()}">'

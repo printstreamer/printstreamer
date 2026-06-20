@@ -40,13 +40,23 @@ class StreamSegmentMetacode:
         self.documents += 1
         if self.options.page_sink:
             self.options.page_sink.on_document_start(self.cur_document)
-        MetacodeParser(self._on_page).parse(data)
+        MetacodeParser(self._on_page, jsl=self._jsl_config()).parse(data)
         if self.options.page_sink:
             self.options.page_sink.on_document_end(self.cur_document)
             self.options.page_sink.on_end()
         self.file.documents += self.documents
         self.file.pages += self.pages
         self.file.records += self.records
+
+    def _jsl_config(self):
+        """ Load the JSL named in the parse options (Metacode geometry/fonts/DJDE).
+        Falls back to standard LPS defaults when no JSL is configured (e.g. low-level
+        unit use); process/spec-driven runs are required to supply one (see runner). """
+        path = getattr(self.options, "jsl_path", None)
+        if not path:
+            return None
+        from metacode.jsl import load_jsl
+        return load_jsl(path)
 
     def _on_page(self, width, height, elements):
         self.pages += 1

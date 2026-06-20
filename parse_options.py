@@ -55,6 +55,7 @@ class ParseOptions:
     retain_pages: bool = True                 # keep pages in the model after the sink
     threads: int = 1                          # parse worker threads (1 = serial)
     font_path: str | None = None              # external AFP font-resource library dir
+    jsl_path: str | None = None               # Xerox JSL for Metacode (geometry/fonts/DJDE)
 
     def is_full_scope(self) -> bool:
         """ True when nothing limits the parse (so threading is safe to use). """

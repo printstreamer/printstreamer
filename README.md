@@ -40,6 +40,31 @@ A process is an XML file of steps; run it with `python stream.py <process.xml>`:
 </process>
 ```
 
+## Sample data
+
+`data/` is the default working directory for all inputs, outputs, and index files.
+Process files reference inputs/outputs by bare filename (e.g. `name="test_afp.afp"`),
+and the runner resolves those against `data/` automatically — absolute paths and
+explicit relative paths (e.g. `examples/letter.psml`) are left untouched. Override the
+location with the `PRINTSTREAMER_DATA_DIR` environment variable.
+
+To populate it with a representative corpus across every supported engine:
+
+```bash
+python scripts/sample_printstream_file_collection.py [--data-dir DIR]
+```
+
+This downloads real public-domain PDF, PostScript, PCL, and AFP samples, synthesizes a
+Xerox Metacode sample, and writes `data/printstream_test_report.json` — a manifest that
+classifies each file by magic-byte signature and size tier. The `data/` directory is
+git-ignored, so collected and generated files are never committed.
+
+Metacode/LCDS carries no self-describing geometry, so it is **JSL-driven**: a Job Source
+Library in [config/](config) supplies the page size, fonts, and DJDE prefix. Any
+process/spec step that reads a Metacode input must name one, e.g.
+`<step name="transform" jsl="config/metacode.jsl">` (see
+[examples/metacode_process.xml](examples/metacode_process.xml)).
+
 ## Documentation
 
 | Document | Contents |

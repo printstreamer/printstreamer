@@ -95,6 +95,17 @@ class PSInterpreter:
     model's top-left origin using the page height.
     """
 
+    # Cap on nested procedure execution. Real-world prologues define procedures that
+    # call procedures; pathological or self-referential definitions would otherwise
+    # recurse until Python's stack overflows. We stop descending past this depth
+    # (best-effort interpretation) so a deep/looping definition never crashes the parse.
+    MAX_PROC_DEPTH = 120
+    # Hard bounds so a large/pathological stream can never hang or exhaust memory:
+    # interpretation stops after this many operators (best-effort, page is finalized),
+    # and the operand stack is trimmed if it grows without bound (mis-tracked stacks).
+    MAX_OPS = 1_000_000
+    MAX_STACK = 100_000
+
     def __init__(self, on_page):
         self.on_page = on_page
         self.stack = []
@@ -106,6 +117,8 @@ class PSInterpreter:
         self.elements = []
         self.path = []          # list of subpaths; each is list of (x, y) device points
         self._page_open = False
+        self._depth = 0         # current nested-procedure execution depth
+        self._ops = 0           # operators executed (budget counter)
 
     # -- running ----------------------------------------------------------
 
@@ -113,8 +126,11 @@ class PSInterpreter:
         self._scan_bbox(text)
         tokens = tokenize(text)
         i = 0
-        while i < len(tokens):
+        while i < len(tokens) and self._ops <= self.MAX_OPS:
             i = self._exec(tokens, i)
+        if self._ops > self.MAX_OPS:
+            logger.warning("PostScript op budget (%d) reached; finalizing best-effort.",
+                           self.MAX_OPS)
         if self._page_open:
             self._showpage()
 
@@ -128,6 +144,11 @@ class PSInterpreter:
                 pass
 
     def _exec(self, tokens, i):
+        self._ops += 1
+        if self._ops > self.MAX_OPS:
+            return len(tokens)              # budget exhausted: end this token list
+        if len(self.stack) > self.MAX_STACK:
+            del self.stack[:-1000]          # runaway stack (mis-tracked): keep the tail
         kind, tok = tokens[i]
         if kind == "string":
             self.stack.append(_unescape(tok))
@@ -187,10 +208,16 @@ class PSInterpreter:
 
     def _run_proc(self, value):
         if isinstance(value, tuple) and value and value[0] == "proc":
-            i = 0
-            body = value[1]
-            while i < len(body):
-                i = self._exec(body, i)
+            if self._depth >= self.MAX_PROC_DEPTH:
+                return                      # too deep: stop (best-effort, never crash)
+            self._depth += 1
+            try:
+                i = 0
+                body = value[1]
+                while i < len(body) and self._ops <= self.MAX_OPS:
+                    i = self._exec(body, i)
+            finally:
+                self._depth -= 1
         else:
             self.stack.append(value)
 
@@ -198,6 +225,12 @@ class PSInterpreter:
         vals = self.stack[-n:] if n else []
         del self.stack[-n:]
         return vals if n != 1 else (vals[0] if vals else None)
+
+    def _fpop(self):
+        """ Pop one operand coerced to float; 0.0 when the stack holds a non-number
+        (stack imbalances are common in best-effort interpretation). """
+        v = self._pop()
+        return v if isinstance(v, (int, float)) else 0.0
 
     def _open_page(self):
         if not self._page_open:
@@ -221,18 +254,18 @@ class PSInterpreter:
         self.path = []
 
     def op_moveto(self):
-        y = self._pop(); x = self._pop()
+        y = self._fpop(); x = self._fpop()
         self.gs.x, self.gs.y = self.gs.dev(x, y)
         self.path.append([(self.gs.x, self.gs.y)])
 
     def op_rmoveto(self):
-        dy = self._pop(); dx = self._pop()
+        dy = self._fpop(); dx = self._fpop()
         self.gs.x += dx * self.gs.sx
         self.gs.y += dy * self.gs.sy
         self.path.append([(self.gs.x, self.gs.y)])
 
     def op_lineto(self):
-        y = self._pop(); x = self._pop()
+        y = self._fpop(); x = self._fpop()
         self.gs.x, self.gs.y = self.gs.dev(x, y)
         if not self.path:
             self.path.append([(self.gs.x, self.gs.y)])
@@ -240,7 +273,7 @@ class PSInterpreter:
             self.path[-1].append((self.gs.x, self.gs.y))
 
     def op_rlineto(self):
-        dy = self._pop(); dx = self._pop()
+        dy = self._fpop(); dx = self._fpop()
         self.gs.x += dx * self.gs.sx
         self.gs.y += dy * self.gs.sy
         if self.path:
@@ -270,7 +303,7 @@ class PSInterpreter:
         self.path = []
 
     def op_rectfill(self):
-        h = self._pop(); w = self._pop(); y = self._pop(); x = self._pop()
+        h = self._fpop(); w = self._fpop(); y = self._fpop(); x = self._fpop()
         x0, y0 = self.gs.dev(x, y)
         self._add(GraphicElement(
             ops=[DrawOp("box", [Point(x0, self._ty(y0 + h * self.gs.sy)),
@@ -279,7 +312,7 @@ class PSInterpreter:
                                           w * self.gs.sx, h * self.gs.sy)))
 
     def op_rectstroke(self):
-        h = self._pop(); w = self._pop(); y = self._pop(); x = self._pop()
+        h = self._fpop(); w = self._fpop(); y = self._fpop(); x = self._fpop()
         x0, y0 = self.gs.dev(x, y)
         self._add(GraphicElement(
             ops=[DrawOp("box", [Point(x0, self._ty(y0 + h * self.gs.sy)),
@@ -289,17 +322,17 @@ class PSInterpreter:
 
     # colour
     def op_setrgbcolor(self):
-        b = self._pop(); g = self._pop(); r = self._pop()
+        b = self._fpop(); g = self._fpop(); r = self._fpop()
         self.gs.color = Color.rgb(r, g, b)
 
     def op_setgray(self):
-        self.gs.color = Color.gray(self._pop())
+        self.gs.color = Color.gray(self._fpop())
 
     def op_sethsbcolor(self):
         self._pop(3)        # not modelled precisely; keep current colour
 
     def op_setlinewidth(self):
-        self.gs.line_width = self._pop() * self.gs.sx
+        self.gs.line_width = self._fpop() * self.gs.sx
 
     # fonts / text
     def op_findfont(self):
@@ -308,7 +341,7 @@ class PSInterpreter:
         self.stack.append({"font": fname, "size": 1.0})
 
     def op_scalefont(self):
-        size = self._pop(); fd = self._pop()
+        size = self._fpop(); fd = self._pop()
         if isinstance(fd, dict):
             fd = dict(fd); fd["size"] = size
             self.stack.append(fd)
@@ -362,14 +395,14 @@ class PSInterpreter:
             self.gs = self.gstack.pop()
 
     def op_translate(self):
-        ty = self._pop(); tx = self._pop()
+        ty = self._fpop(); tx = self._fpop()
         self.gs.tx += tx * self.gs.sx
         self.gs.ty += ty * self.gs.sy
 
     def op_scale(self):
-        sy = self._pop(); sx = self._pop()
-        self.gs.sx *= sx
-        self.gs.sy *= sy
+        sy = self._fpop(); sx = self._fpop()
+        self.gs.sx *= sx or 1.0
+        self.gs.sy *= sy or 1.0
 
     # definitions
     def op_def(self):
@@ -417,21 +450,28 @@ class PSInterpreter:
     def op_mod(self):
         self._bin(lambda a, b: int(a) % int(b) if b else 0)
 
+    def _unary(self, fn):
+        a = self._pop()
+        try:
+            self.stack.append(fn(a))
+        except Exception:
+            self.stack.append(0)
+
     def op_neg(self):
-        self.stack.append(-self._pop())
+        self._unary(lambda a: -a)
 
     def op_abs(self):
-        self.stack.append(abs(self._pop()))
+        self._unary(abs)
 
     def op_round(self):
-        self.stack.append(round(self._pop()))
+        self._unary(round)
 
     def op_truncate(self):
-        self.stack.append(float(int(self._pop())))
+        self._unary(lambda a: float(int(a)))
 
     def op_sqrt(self):
         import math
-        self.stack.append(math.sqrt(max(0.0, self._pop())))
+        self._unary(lambda a: math.sqrt(max(0.0, a)))
 
     # comparison / boolean
     def op_eq(self):
@@ -492,12 +532,18 @@ class PSInterpreter:
     def op_repeat(self):
         proc = self._pop(); n = self._pop()
         for _ in range(int(n) if isinstance(n, (int, float)) else 0):
+            if self._ops > self.MAX_OPS:
+                break
             self._run_proc(proc)
 
     def op_for(self):
-        proc = self._pop(); limit = self._pop(); inc = self._pop(); i = self._pop()
+        proc = self._pop(); limit = self._fpop(); inc = self._fpop(); i = self._fpop()
+        if inc == 0:
+            return
         guard = 0
         while ((inc > 0 and i <= limit) or (inc < 0 and i >= limit)) and guard < 100000:
+            if self._ops > self.MAX_OPS:
+                break
             self.stack.append(i)
             self._run_proc(proc)
             i += inc
@@ -505,8 +551,8 @@ class PSInterpreter:
 
     # paths: curves approximated by line segments
     def op_curveto(self):
-        y3 = self._pop(); x3 = self._pop(); y2 = self._pop(); x2 = self._pop()
-        y1 = self._pop(); x1 = self._pop()
+        y3 = self._fpop(); x3 = self._fpop(); y2 = self._fpop(); x2 = self._fpop()
+        y1 = self._fpop(); x1 = self._fpop()
         p0 = (self.gs.x, self.gs.y)
         p1 = self.gs.dev(x1, y1); p2 = self.gs.dev(x2, y2); p3 = self.gs.dev(x3, y3)
         for k in range(1, 9):
@@ -522,7 +568,7 @@ class PSInterpreter:
 
     def op_arc(self):
         import math
-        a2 = self._pop(); a1 = self._pop(); r = self._pop(); cy = self._pop(); cx = self._pop()
+        a2 = self._fpop(); a1 = self._fpop(); r = self._fpop(); cy = self._fpop(); cx = self._fpop()
         pts = []
         steps = max(4, int(abs(a2 - a1) / 15))
         for k in range(steps + 1):
@@ -535,7 +581,7 @@ class PSInterpreter:
     op_arcn = op_arc
 
     def op_selectfont(self):
-        size = self._pop(); name = self._pop()
+        size = self._fpop(); name = self._pop()
         fname = name[1] if isinstance(name, tuple) else str(name)
         self.gs.font = fname
         self.gs.size = size * self.gs.sy
@@ -556,3 +602,130 @@ class PSInterpreter:
 
     def op_initgraphics(self):
         self.gs = GState()
+
+    # -- extended coverage (real-world prologues) -------------------------
+    # colour
+    def op_setcmykcolor(self):
+        k = self._pop(); y = self._pop(); m = self._pop(); c = self._pop()
+        try:
+            r = (1 - c) * (1 - k); g = (1 - m) * (1 - k); b = (1 - y) * (1 - k)
+            self.gs.color = Color.rgb(r, g, b)
+        except Exception:
+            pass
+
+    # paint / clip (clip is a no-op here; just clear the current path like PS does)
+    op_eofill = op_fill
+
+    def op_clip(self):
+        pass
+
+    op_eoclip = op_clip
+    op_initclip = op_clip
+
+    def op_rectclip(self):
+        self._pop(4)
+
+    # text show variants -> treat like show (spacing nuances dropped)
+    def op_widthshow(self):
+        s = self._pop(); self._pop(3)       # cx cy char (string) widthshow
+        self.stack.append(s); self.op_show()
+
+    def op_awidthshow(self):
+        s = self._pop(); self._pop(5)       # cx cy char ax ay (string) awidthshow
+        self.stack.append(s); self.op_show()
+
+    def op_kshow(self):
+        s = self._pop(); self._pop()        # (string) proc kshow
+        self.stack.append(s); self.op_show()
+
+    def op_xshow(self):
+        self._pop()                          # numarray
+        self.op_show()
+
+    op_yshow = op_xshow
+    op_xyshow = op_xshow
+
+    def op_glyphshow(self):
+        self._pop()                          # name/glyph: no metrics, skip
+
+    # matrix / ctm
+    def op_concat(self):
+        m = self._pop()
+        if isinstance(m, list) and len(m) >= 6:
+            a, b, c, d, e, f = (m[i] if isinstance(m[i], (int, float)) else 0 for i in range(6))
+            self.gs.sx *= a or 1.0
+            self.gs.sy *= d or 1.0
+            self.gs.tx += e * self.gs.sx
+            self.gs.ty += f * self.gs.sy
+
+    def op_matrix(self):
+        self.stack.append([1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
+
+    op_currentmatrix = op_matrix
+
+    def op_setmatrix(self):
+        self._pop()
+
+    def op_currentpoint(self):
+        self.stack.append(self.gs.x); self.stack.append(self.gs.y)
+
+    # path
+    def op_rcurveto(self):
+        dy3 = self._fpop(); dx3 = self._fpop(); dy2 = self._fpop()
+        dx2 = self._fpop(); dy1 = self._fpop(); dx1 = self._fpop()
+        x0, y0 = self.gs.x, self.gs.y
+        p1 = (x0 + dx1 * self.gs.sx, y0 + dy1 * self.gs.sy)
+        p2 = (x0 + dx2 * self.gs.sx, y0 + dy2 * self.gs.sy)
+        p3 = (x0 + dx3 * self.gs.sx, y0 + dy3 * self.gs.sy)
+        for k in range(1, 9):
+            t = k / 8.0; mt = 1 - t
+            x = mt**3 * x0 + 3 * mt**2 * t * p1[0] + 3 * mt * t**2 * p2[0] + t**3 * p3[0]
+            y = mt**3 * y0 + 3 * mt**2 * t * p1[1] + 3 * mt * t**2 * p2[1] + t**3 * p3[1]
+            if self.path:
+                self.path[-1].append((x, y))
+        self.gs.x, self.gs.y = p3
+
+    op_arct = op_arc
+
+    # dict / scoping (definitions are kept flat in self.defs; scoping is a no-op)
+    def op_dict(self):
+        self._pop(); self.stack.append({})
+
+    def op_begin(self):
+        self._pop()
+
+    def op_end(self):
+        pass
+
+    def op_load(self):
+        key = self._pop()
+        name = key[1] if isinstance(key, tuple) else key
+        self.stack.append(self.defs.get(name))
+
+    def op_known(self):
+        self._pop(2); self.stack.append(False)
+
+    def op_where(self):
+        self._pop(); self.stack.append(False)
+
+    def op_cvx(self):
+        pass
+
+    op_cvi = op_round
+    op_cvr = op_truncate
+
+    def op_cvn(self):
+        v = self._pop()
+        self.stack.append(("name", v) if isinstance(v, str) else v)
+
+    def op_cvs(self):
+        v = self._pop(); self._pop()        # any string cvs -> string
+        self.stack.append(str(v))
+
+    # images: recognized so they don't fall through as unknown; inline pixel data in
+    # the token stream is not decoded (documented fidelity limit).
+    def op_image(self):
+        self.stack.clear()
+
+    op_imagemask = op_image
+    op_colorimage = op_image

@@ -24,7 +24,7 @@ printstreamer = "stream:main"
 [tool.setuptools]
 # Flat-layout modules plus the afp record-class package.
 py-modules = [
-    "stream", "stream_parser", "stream_file",
+    "stream", "stream_parser", "stream_file", "paths",
     "stream_segment_afp", "stream_segment_pdf",
     "stream_page_afp", "stream_page_pdf",
     "stream_record_afp", "stream_afp", "stream_pdf",

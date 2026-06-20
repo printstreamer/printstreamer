@@ -2,17 +2,31 @@
 
 import argparse
 import logging
+import os
 import sys
 from xml.dom import minidom
 
+from paths import PROJECT_ROOT
 from process.runner import run_step
 
 logger = logging.getLogger("stream")
 
 
+def _resolve_process_path(process_path):
+    """ Locate the process file: as given (relative to the current directory), else
+    relative to the project root. This lets ``stream.py <name>.xml`` work regardless of
+    the working directory it is launched from (e.g. an IDE run configuration). """
+    if os.path.isfile(process_path):
+        return process_path
+    candidate = os.path.join(PROJECT_ROOT, process_path)
+    if os.path.isfile(candidate):
+        return candidate
+    return process_path                       # let the caller raise a clear OSError
+
+
 def run_process(process_path, start=None, stop=None):
     """ Execute the steps of a process XML file between ``start`` and ``stop``. """
-    document = minidom.parse(process_path)
+    document = minidom.parse(_resolve_process_path(process_path))
     process_steps = document.documentElement.getElementsByTagName("step")
     started = start is None
     stopped = False

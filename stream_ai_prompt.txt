@@ -76,3 +76,10 @@ When parsing, be sure to capture the correct font name, font size, exact width o
 
 Update the documentation.  Review the changes carefully in the role of a reviewer, and address any issues and gaps.
 
+
+Sample data files:  Find a list of printstream document files that I can use to test some printstream manipulation software.  Provide the list of download links to me and give me a description of the content, size, and complexity and number of documents or pages in each.  I am looking for a variety of small, medium, and large files from different sources and preferably with a variety of styles and types of images, forms, etc.  I am looking for files in the following formats:  aftp (advanced function printing), pdf, postscript, pcl, metacode.  These should be files that I can freely and legally download and use.
+
+Write me a scripts to search for, capture, analyze, and generate a json report on such files.  It should create a json report on each file that I can programmatically use to select files for testing.
+
+Also add AFP_Structured_Document.afp and other pre-existing sample printstream files to the sample report.  Find a common JSL file from the internet that is set up to handle metacode.  Save it to the "config" directory.  Use it in conjunction with metacode generation and parsing as the settings and djde info are critical to metacode file format, and update the mock metacode file based on it.  The jsl file will need to be specified in the spec or process file for any metacode processing.
+

@@ -2,7 +2,7 @@
      same model renders to PDF and AFP at once. -->
 <process>
     <step name="compose" index="letter.idx" index_format="json">
-        <file name="letter.psml" type="input"/>
+        <file name="examples/letter.psml" type="input"/>
         <file name="letter.pdf" file_type="pdf" type="output"/>
         <file name="letter.afp" file_type="afp" type="output"/>
     </step>

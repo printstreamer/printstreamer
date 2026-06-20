@@ -1,0 +1,13 @@
+<!-- Parse a Xerox Metacode/LCDS stream and render it to PDF. Metacode carries no
+     self-describing geometry, so the JSL (Job Source Library) is required: it supplies
+     the page size, font assignments, and the DJDE prefix used to recognize in-stream
+     descriptor records. Override jsl= to use your own compiled environment. -->
+<process>
+    <step name="analyze" jsl="config/metacode.jsl">
+        <file name="Metacode_Generated_Mock.met" file_type="metacode" type="input"/>
+    </step>
+    <step name="transform" jsl="config/metacode.jsl">
+        <file name="Metacode_Generated_Mock.met" file_type="metacode" type="input"/>
+        <file name="metacode_out.pdf" file_type="pdf" type="output"/>
+    </step>
+</process>

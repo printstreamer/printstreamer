@@ -10,5 +10,8 @@ if ROOT not in sys.path:
 
 logging.disable(logging.CRITICAL)
 
-AFP_SAMPLE = os.path.join(ROOT, "test_afp.afp")
-PDF_SAMPLE = os.path.join(ROOT, "test_pdf.pdf")
+from paths import in_data  # noqa: E402  (requires ROOT on sys.path, set just above)
+
+# Sample inputs are referenced by bare filename and resolved from the data directory.
+AFP_SAMPLE = in_data("test_afp.afp")
+PDF_SAMPLE = in_data("test_pdf.pdf")

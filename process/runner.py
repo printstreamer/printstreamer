@@ -14,6 +14,7 @@ from model.document import Document, StreamDocumentSet
 from model.geometry import Rect
 from model import visitor
 from parse_options import ParseLevel, ParseOptions
+from paths import in_data
 from process import dump as dump_mod
 from process import index as index_mod
 from process.index import FieldSpec, IndexSink
@@ -69,6 +70,9 @@ def parse_options_from(cfg, **overrides) -> ParseOptions:
     font_path = cfg.opt("font-path") or cfg.opt("font_path")
     if font_path:
         opts.font_path = font_path
+    jsl = cfg.opt("jsl")
+    if jsl:
+        opts.jsl_path = jsl
     opts.threads = int(cfg.opt("threads", str(DEFAULT_THREADS)))
     for k, v in overrides.items():
         setattr(opts, k, v)
@@ -94,20 +98,24 @@ class StepConfig:
 
     def inputs(self):
         if self.spec and self.spec.inputs:
-            return [(f.name, f.type) for f in self.spec.inputs]
-        return _files(self.step, "input")
+            files = [(f.name, f.type) for f in self.spec.inputs]
+        else:
+            files = _files(self.step, "input")
+        return [(in_data(name), ftype) for name, ftype in files]
 
     def outputs(self):
         if self.spec and self.spec.outputs:
-            return [(f.name, f.type) for f in self.spec.outputs]
-        return _files(self.step, "output")
+            files = [(f.name, f.type) for f in self.spec.outputs]
+        else:
+            files = _files(self.step, "output")
+        return [(in_data(name), ftype) for name, ftype in files]
 
     def index(self):
         if self.spec and self.spec.index:
             i = self.spec.index
-            return {"name": i.name, "format": i.format,
+            return {"name": in_data(i.name), "format": i.format,
                     "compress": i.compress, "level": i.level}
-        return {"name": _attr(self.step, "index"),
+        return {"name": in_data(_attr(self.step, "index")),
                 "format": _attr(self.step, "index_format", "flat"),
                 "compress": _attr(self.step, "compress", "none"),
                 "level": int(_attr(self.step, "compress_level", "0"))}
@@ -179,7 +187,7 @@ def field_specs(step) -> list[FieldSpec]:
 def analyze(step):
     """ Parse and report stats (bounded memory); optionally dump the model. """
     cfg = StepConfig(step)
-    dump_path = cfg.opt("dump")
+    dump_path = in_data(cfg.opt("dump"))
     stats = StatsSink()
     retain = bool(dump_path)            # only retain pages if we must dump them
     opts = parse_options_from(cfg, page_sink=stats, retain_pages=retain)
@@ -199,7 +207,7 @@ def extract(step):
     cfg = StepConfig(step)
     index = cfg.index()
     fmt = index["format"]
-    index_path = index["name"] or ("index." + fmt)
+    index_path = index["name"] or in_data("index." + fmt)
     codec, level = index["compress"], index["level"]
     specs = field_specs(step) + cfg.fields
     pages_per_doc = cfg.pages_per_document
@@ -272,7 +280,7 @@ def merge(step):
     cfg = StepConfig(step)
     index = cfg.index()
     fmt = index["format"]
-    index_path = index["name"] or ("index." + fmt)
+    index_path = index["name"] or in_data("index." + fmt)
     records = index_mod.load(compression.read_file(index_path), fmt, kind="page")
     outputs = cfg.outputs()
     if not outputs:
@@ -519,7 +527,7 @@ def split(step):
     fmt = index["format"]
     records = index_mod.load(compression.read_file(index["name"]), fmt, kind="page")
     key_field = cfg.opt("key")
-    pattern = (cfg.outputs()[0][0] if cfg.outputs() else None) or cfg.opt("output", "split_{key}.pdf")
+    pattern = (cfg.outputs()[0][0] if cfg.outputs() else None) or in_data(cfg.opt("output", "split_{key}.pdf"))
     out_type = (cfg.outputs()[0][1] if cfg.outputs() else None) or cfg.opt("output_type", "pdf")
     page_index = _build_page_index(records)
     groups = {}
@@ -577,7 +585,7 @@ def edit(step):
     parser.write_outputs()
     if extracted and cfg.opt("extract_to"):
         import json
-        with open(cfg.opt("extract_to"), "w", encoding="utf-8") as fh:
+        with open(in_data(cfg.opt("extract_to")), "w", encoding="utf-8") as fh:
             json.dump(extracted, fh, indent=2)
     counts = {}
     for op in ops:
@@ -600,7 +608,7 @@ def labels(step):
     if template_node:
         template = _inner_xml(template_node[0])
     elif cfg.opt("template"):
-        with open(cfg.opt("template"), "r", encoding="utf-8") as fh:
+        with open(in_data(cfg.opt("template")), "r", encoding="utf-8") as fh:
             template = fh.read()
     else:
         raise ValueError("labels step requires a <label> template or template= file")
@@ -631,10 +639,28 @@ PROCESSES = {
 }
 
 
+_METACODE_EXTS = (".met", ".metacode")
+
+
+def _require_jsl_for_metacode(step):
+    """ Metacode is meaningless without its JSL (page geometry, fonts, DJDE prefix), so
+    a process/spec step that reads a Metacode input must name one via ``jsl=``. """
+    import os
+    cfg = StepConfig(step)
+    has_metacode = any(
+        (ftype == "metacode") or os.path.splitext(name)[1].lower() in _METACODE_EXTS
+        for name, ftype in cfg.inputs())
+    if has_metacode and not cfg.opt("jsl"):
+        raise ValueError(
+            "Metacode processing requires a JSL: add jsl=\"config/metacode.jsl\" "
+            "(or your own JSL) to the step or its spec.")
+
+
 def run_step(step):
     name = step.getAttribute("name")
     handler = PROCESSES.get(name)
     if handler is None:
         logger.warning("No handler for process step %r; skipping", name)
         return None
+    _require_jsl_for_metacode(step)
     return handler(step)
