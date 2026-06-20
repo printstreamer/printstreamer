@@ -59,9 +59,16 @@ class StreamSegmentAFP:
         if sink:
             sink.on_document_start(self.cur_document)
 
-    def end_document(self):
-        if self.cur_document is not None and self.options.page_sink:
-            self.options.page_sink.on_document_end(self.cur_document)
+    def end_document(self, end_offset=None):
+        if self.cur_document is not None:
+            # Capture the document's full envelope byte span (BDT..EDT) for faithful
+            # streaming reach-back on a non-transform merge.
+            sref = self.cur_document.source_ref
+            if sref and sref.byte_offset is not None and end_offset is not None:
+                self.cur_document.attributes["byte_offset"] = sref.byte_offset
+                self.cur_document.attributes["byte_count"] = end_offset - sref.byte_offset
+            if self.options.page_sink:
+                self.options.page_sink.on_document_end(self.cur_document)
         self.cur_document = None
 
     def begin_page(self, name=None, offset=None):
@@ -80,12 +87,22 @@ class StreamSegmentAFP:
             source_ref=SourceRef(file_format="afp", record_type="BPG",
                                  record_number=self.cur_rec_number, byte_offset=offset),
         )
+        # Record-span start for the index (filled with the count on end_page).
+        self.cur_page.attributes["record_offset"] = self.cur_rec_number
         # Always attach so structural offsets are correct; may be released on end.
         self.cur_document.add_page(self.cur_page)
 
-    def end_page(self):
+    def end_page(self, end_offset=None, end_record=None):
         page = self.cur_page
         if page is not None:
+            # Capture the page's byte/record span in the input for index reach-back.
+            start = page.source_ref.byte_offset if page.source_ref else None
+            if start is not None and end_offset is not None:
+                page.source_ref.length = end_offset - start
+                page.attributes["byte_count"] = end_offset - start
+            if end_record is not None:
+                rec_start = page.attributes.get("record_offset", end_record)
+                page.attributes["record_count"] = end_record - rec_start + 1
             if self.cur_page_in_scope:
                 self.parsed_pages += 1
                 if self.options.page_sink:
@@ -146,11 +163,11 @@ class StreamSegmentAFP:
         if rec_type == "BDT":
             self.begin_document(offset=rec_offset)
         elif rec_type == "EDT":
-            self.end_document()
+            self.end_document(end_offset=rec_offset + rec_len)
         elif rec_type == "BPG":
             self.begin_page(offset=rec_offset)
         elif rec_type == "EPG":
-            self.end_page()
+            self.end_page(end_offset=rec_offset + rec_len, end_record=self.cur_rec_number)
             return
 
         # Gate content parsing by parse level, record-type filter, and page scope.

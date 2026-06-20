@@ -11,6 +11,8 @@ from __future__ import annotations
 import logging
 from struct import unpack
 
+from afp import structured_field as _sf
+from afp import triplets as _tr
 from model.element import (BarcodeElement, ContainerElement, DrawOp,
                            GraphicElement, ImageElement, OverlayElement, SourceRef)
 from model.geometry import Point, Rect
@@ -35,6 +37,8 @@ class AfpObjectContext:
         self.segment = segment
         self.obj = None                  # dict describing the current object
         self.fonts = {}                  # local font name -> FontResource
+        self.embedded_fonts = {}         # char-set/coded-font name -> fonts.FontBuilder
+        self.font_builder = None         # in-progress embedded FOCA font
 
     # -- geometry helpers -------------------------------------------------
 
@@ -56,7 +60,14 @@ class AfpObjectContext:
 
     # -- object lifecycle -------------------------------------------------
 
+    def _policy(self):
+        return getattr(self.segment, "options", None)
+
     def begin_object(self, kind, name, record_type):
+        policy = self._policy()
+        if policy is not None and not policy.wants_object(kind):
+            self.obj = None                  # process doesn't need this object kind
+            return
         self.obj = {
             "kind": kind,                # "image" | "graphic" | "barcode"
             "name": name,
@@ -83,15 +94,18 @@ class AfpObjectContext:
             self.obj["data"] += data
 
     def set_object_descriptor(self, data):
-        """ Object Area Descriptor (OBD): capture extent from the size triplet. """
+        """ Object Area Descriptor (OBD): capture extent and units from triplets. """
         if self.obj is None:
             return
-        size = _find_triplet(data, 0x4C)     # Object Area Size triplet
-        if size and len(size) >= 7:
-            # size: UnitBase(1) Xext(3) Yext(3)
-            x_ext = _uint(size[1:4])
-            y_ext = _uint(size[4:7])
-            self.obj["descriptor"]["area_extent"] = (x_ext, y_ext)
+        trips = _tr.parse_triplets(data, self._policy())
+        size = _tr.find(trips, 0x4C)         # Object Area Size triplet
+        if size and "x_size" in size.fields:
+            self.obj["descriptor"]["area_extent"] = (size.fields["x_size"],
+                                                      size.fields["y_size"])
+        units = _tr.find(trips, 0x4B)        # Measurement Units triplet
+        if units and "x_units" in units.fields:
+            self.obj["descriptor"]["area_units"] = (units.fields["x_units"],
+                                                    units.fields["y_units"])
 
     def end_object(self):
         if self.obj is None:
@@ -248,14 +262,46 @@ class AfpObjectContext:
     # -- coded fonts (MCF) ------------------------------------------------
 
     def map_coded_fonts(self, data):
-        """ Parse a Map Coded Font (format 2) record into FontResources. """
+        """ Parse a Map Coded Font (MCF-2) record into FontResources via the shared
+        structured-field engine: each repeating group's triplets give the character
+        set (FQN 0x86), code page (FQN 0x85), coded-font name (FQN 0x8E), local id
+        (0x24), char rotation (0x26) and any font descriptor (0x5D). """
         import fontmetrics
         doc = self.segment.cur_document
-        for local_id, char_set, code_page in _parse_mcf(data):
+        view = _sf.decode("MCF", data, self._policy())
+        for group in view.groups:
+            trips = group.get("triplets", [])
+            char_set = code_page = coded_font = None
+            local_id = None
+            rotation = 0
+            for t in trips:
+                if t.tid == 0x02:
+                    ft = t.fields.get("fqn_type")
+                    nm = t.fields.get("name")
+                    if ft == 0x86:
+                        char_set = nm
+                    elif ft == 0x85:
+                        code_page = nm
+                    elif ft == 0x8E:
+                        coded_font = nm
+                elif t.tid == 0x24:
+                    local_id = t.fields.get("resource_local_id")
+                elif t.tid == 0x26:
+                    rotation = t.fields.get("rotation", 0)
+            if local_id is None:
+                continue
             name = f"F{local_id:02X}"
-            font = FontResource(name=name, coded_font=char_set, code_page=code_page,
-                                char_set=char_set, size=10.0)
+            font = FontResource(name=name, coded_font=coded_font or char_set,
+                                code_page=code_page, char_set=char_set, size=10.0,
+                                orientation=rotation)
             font.typeface = fontmetrics.base_font_for(char_set)
+            # Faithful text decode: resolve the code page to a code-point->Unicode map.
+            from afp import codepages
+            font.encoding_map = codepages.unicode_map(code_page)
+            # Resolve precise metrics: embedded FOCA / external library first, then a
+            # base-font fallback so every character's exact width is captured.
+            from afp import fonts as _fonts
+            _fonts.resolve_font(font, self._policy(), self.embedded_fonts)
             if doc is not None:
                 doc.resource_library.add(font)
             self.fonts[name] = font
@@ -298,57 +344,26 @@ class AfpObjectContext:
         if page is not None and data:
             page.attributes["medium_map"] = data[0:8].decode("cp500", "replace").strip()
 
+    # -- tags / index (TLE) -----------------------------------------------
 
-# -- structured-field / triplet helpers ------------------------------------
-
-def _find_triplet(data, triplet_id):
-    """ Return the data of the first triplet with the given id (or None). """
-    i = 0
-    while i + 1 < len(data):
-        length = data[i]
-        if length < 2 or i + length > len(data):
-            break
-        if data[i + 1] == triplet_id:
-            return data[i + 2:i + length]
-        i += length
-    return None
-
-
-def _parse_mcf(data):
-    """ Yield (local_id, char_set, code_page) from an MCF (format 2) record.
-
-    Each repeating group starts with a 2-byte length and contains triplets:
-    Fully Qualified Name (X'02') entries for the character set (X'86') and code
-    page (X'85'), and a Resource Local Identifier (X'24') giving the local id.
-    """
-    i = 0
-    while i + 2 <= len(data):
-        rg_len = _uint(data[i:i + 2])
-        if rg_len < 2 or i + rg_len > len(data):
-            break
-        group = data[i + 2:i + rg_len]
-        char_set = code_page = None
-        local_id = None
-        j = 0
-        while j + 1 < len(group):
-            tlen = group[j]
-            if tlen < 2 or j + tlen > len(group):
-                break
-            tid = group[j + 1]
-            tdata = group[j + 2:j + tlen]
-            if tid == 0x02 and len(tdata) >= 2:        # Fully Qualified Name
-                fqn_type = tdata[0]                     # tdata[1] = FQN format byte
-                name = tdata[2:].decode("cp500", "replace").strip()
-                if fqn_type == 0x86:
-                    char_set = name
-                elif fqn_type == 0x85:
-                    code_page = name
-            elif tid == 0x24 and len(tdata) >= 2:      # Resource Local Identifier
-                local_id = tdata[1]
-            j += tlen
-        if local_id is not None:
-            yield local_id, char_set, code_page
-        i += rg_len
+    def tag_logical_element(self, data):
+        """ Tag Logical Element (TLE) -> an IndexTag on the current page (or document
+        if no page is open). The tag name comes from a Fully Qualified Name triplet
+        (0x02) and the value from an Attribute Value triplet (0x36). """
+        from model.page import IndexTag
+        trips = _tr.parse_triplets(data)
+        name = value = None
+        for t in trips:
+            if t.tid == 0x02 and name is None:
+                name = t.fields.get("name")
+            elif t.tid == 0x36:
+                value = t.fields.get("value")
+        if not name:
+            return
+        tag = IndexTag(name=name, value=value)
+        target = self.segment.cur_page or self.segment.cur_document
+        if target is not None:
+            target.index_tags.append(tag)
 
 
 # IOCA self-defining field codes.

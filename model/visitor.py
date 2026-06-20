@@ -98,6 +98,28 @@ def select_in_window(scope, window: Rect, contained: bool = True,
     return results
 
 
+def text_in_window(element, window: Rect) -> str:
+    """ Return only the characters of a text element that fall within ``window``.
+
+    Uses the per-character advances captured at parse time (``attributes["char_advances"]``)
+    to clip a run horizontally, so a window cutting through a line yields exactly the
+    in-window characters. Falls back to the whole text when advances are unavailable. """
+    text = getattr(element, "text", "") or ""
+    advances = (element.attributes or {}).get("char_advances")
+    if not text or not advances or getattr(element, "orientation", 0) % 360 != 0:
+        return text
+    x = element.position.x
+    x0, x1 = window.x, window.x + window.width
+    kept = []
+    for ch, adv in zip(text, advances):
+        cx0, cx1 = x, x + adv
+        # include the character if its horizontal centre lies within the window
+        if x0 <= (cx0 + cx1) / 2.0 <= x1:
+            kept.append(ch)
+        x = cx1
+    return "".join(kept)
+
+
 # --- edit operations -------------------------------------------------------
 
 def remove(matches) -> int:

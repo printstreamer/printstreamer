@@ -11,6 +11,7 @@ import logging
 
 import stream_afp
 from model.element import ElementKind
+from model.resource import ResourceKind
 from units import POINTS_PER_INCH
 
 logger = logging.getLogger(__name__)
@@ -49,22 +50,28 @@ class AfpWriter:
     def write(self, document_set, path):
         out = bytearray()
         for di, document in enumerate(document_set.documents, start=1):
-            name = (document.name or f"DOC{di:05d}").encode("latin-1", "replace")[:8].ljust(8)
+            # AFP resource/structure names are EBCDIC (cp500), matching the reader.
+            name = _name8(document.name or f"DOC{di:05d}")
             out += _sf("BDT", name)
             for page in document.pages:
-                self._write_page(out, page)
+                self._write_page(out, page, document)
             out += _sf("EDT", name)
         with open(path, "wb") as fh:
             fh.write(out)
         logger.info("Wrote AFP %s (%d documents, %d pages)",
                     path, document_set.document_count, document_set.page_count)
 
-    def _write_page(self, out, page):
-        pname = str(page.attributes.get("name", "")).encode("latin-1", "replace")[:8].ljust(8)
+    def _write_page(self, out, page, document=None):
+        pname = _name8(str(page.attributes.get("name", "")))
         out += _sf("BPG", pname)
         out += _sf("PGD", self._pgd_data(page))
         if page.attributes.get("medium_map"):
             out += _sf("IMM", _name8(page.attributes["medium_map"]))
+        # Map coded fonts (MCF) so the code page / character set survive a round trip
+        # and text decodes identically on re-parse.
+        mcf = self._mcf_data(document, page)
+        if mcf:
+            out += _sf("MCF", mcf)
         # Objects first (painted behind), then the text object on top.
         for element in page.ordered_elements():
             self._write_object(out, element)
@@ -93,6 +100,40 @@ class AfpWriter:
                 + _UNITS_PER_10IN.to_bytes(2, "big")
                 + _pt_to_lunits(page.width or 612).to_bytes(3, "big")
                 + _pt_to_lunits(page.height or 792).to_bytes(3, "big"))
+
+    # -- coded fonts (MCF) ------------------------------------------------
+
+    def _mcf_data(self, document, page):
+        """ Build a Map Coded Font (format 2) data area from the document's font
+        resources: one repeating group per font with FQN triplets for the character
+        set (0x86), code page (0x85) and coded font (0x8E), plus a Resource Local
+        Identifier (0x24) carrying the local id parsed from the ``F##`` name. """
+        if document is None:
+            return b""
+        fonts = [r for r in document.resource_library if r.kind == ResourceKind.FONT]
+        if not fonts:
+            return b""
+        groups = bytearray()
+        for res in fonts:
+            try:
+                local_id = int(str(res.name).lstrip("F"), 16) & 0xFF
+            except ValueError:
+                continue
+            trips = bytearray()
+            if res.char_set:
+                trips += self._fqn(0x86, res.char_set)
+            if res.code_page:
+                trips += self._fqn(0x85, res.code_page)
+            if res.coded_font and res.coded_font != res.char_set:
+                trips += self._fqn(0x8E, res.coded_font)
+            trips += bytes([0x04, 0x24, 0x05, local_id])     # Resource Local Identifier
+            groups += (len(trips) + 2).to_bytes(2, "big") + trips
+        return bytes(groups)
+
+    @staticmethod
+    def _fqn(fqn_type, name):
+        content = bytes([fqn_type, 0x00]) + _name8(name)
+        return bytes([len(content) + 2, 0x02]) + content
 
     # -- text -------------------------------------------------------------
 

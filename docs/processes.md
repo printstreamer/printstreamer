@@ -31,14 +31,23 @@ model. Bounded memory unless dumping. Example:
 ## extract
 Identify documents and write a **page index** and **document index**. Identification and
 fields come from the spec (`<identify>`, `<fields>`) or inline. Index target from
-`<index>` (name/format/compress/level). Index formats: `text`, `csv`, `tab`, `xml`,
-`json`. Example: [index_merge_process.xml](../examples/index_merge_process.xml) +
+`<index>` (name/format). The default format is **`flat`** — flat, uncompressed,
+fixed-length-field records; **`json`** is selectable (and `text`/`csv`/`tab`/`xml` remain
+as secondary delimited formats). The full record layouts are documented in
+[index-format.md](index-format.md). When no field/boundary needs element content, the
+index is built by a **structural offset scan** with no element model. Example:
+[index_merge_process.xml](../examples/index_merge_process.xml) +
 [statement_spec.xml](../examples/statement_spec.xml).
 
 ## merge
-Read an index and assemble output(s) in **index-record order**. Pages may be enhanced
-per the spec's `<enhancements>` (with `{field}` substitution from each index record),
-transformed to a different output format, and **chunked** (`chunk_pages`).
+Read an index and assemble output(s) in **index-record order**. Two paths:
+- **Streaming passthrough** when the output format equals the source format and no
+  model work is requested — page byte spans are copied straight from the input (no model
+  built), with record-level (`<delete hex="…"/>`) deletions applied on the fly.
+- **Transform/model** otherwise — referenced spans are re-parsed into the model, enhanced
+  per the spec's `<enhancements>` (with `{field}` substitution), optionally transformed to
+  another format and **chunked** (`chunk_pages`).
+See [index-format.md](index-format.md) for how the indexes drive the merge.
 
 ## split
 Read an index and write one output per **document** (default) or per **key field**

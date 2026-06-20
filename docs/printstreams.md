@@ -16,16 +16,32 @@ Any reader can be transformed to any writer (5×5 matrix, all verified).
 ## Per-format feature notes
 
 ### AFP (most complete)
-- **Text/PTOCA** with inline/baseline positioning; fonts mapped from **MCF**, decoded
-  via code page; **precise run widths** from font metrics.
+- **One shared decoder**: every structured field is decoded by a single, table-driven
+  engine ([afp/structured_field.py](../afp/structured_field.py)) into fixed fields +
+  repeating groups + **triplets**, rather than 90 bespoke parsers. The triplet engine
+  ([afp/triplets.py](../afp/triplets.py)) decodes the full documented MO:DCA/IOCA/FOCA/
+  BCOCA triplet set — there are **no unknown triplets** on conformant streams.
+- **Text/PTOCA** with inline/baseline positioning, **text colour** (STC/SEC) and
+  **orientation** (STO); fonts mapped from **MCF**, decoded via the resolved **code page**
+  (cp1252/cp500/cp037/…). See [afp/codepages.py](../afp/codepages.py).
+- **Fonts/metrics**: each font captures name, code page, size and **per-character advance
+  widths**, resolved from embedded **FOCA**, an external **font library**
+  (`font-path`), or a base-font fallback — see [afp/fonts.py](../afp/fonts.py),
+  [afp/fontlib.py](../afp/fontlib.py). Per-character widths drive **precise run widths**
+  and **sub-run window extraction**, and font conversion on output (base-14 mapping for
+  PDF/PS, weight selection for PCL, MCF re-emit for AFP).
 - **Images/IOCA**: object area placement (OBD/OBP) → window; content captured; bilevel
   G3/G4 decoded to pixels for PDF (the legacy IBM-MMR variant falls back to an
   outline). See [afp/ioca_image.py](../afp/ioca_image.py).
 - **Graphics/GOCA**: drawing orders decoded to vector ops (line/box).
 - **Barcodes/BCOCA**: symbology + data captured.
-- **Overlays (IPO), page segments (IPS), medium maps (IMM)**: parsed and re-emitted.
+- **Overlays (IPO), page segments (IPS), medium maps (IMM), tags (TLE)**: parsed and
+  re-emitted; TLE becomes a page/document **index tag**.
 - **Structured fields**: anything unmodeled is preserved and round-trips.
 - **Parallel parsing**: AFP can be parsed across worker threads (`threads=`).
+- **Index-driven streaming merge**: a non-transform AFP→AFP `merge` copies page byte
+  spans straight from the input via the flat index files — no model built. See
+  [index-format.md](index-format.md).
 
 ### PDF
 Text (with font, size, colour, position) and images via PyMuPDF; ReportLab output

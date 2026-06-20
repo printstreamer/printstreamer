@@ -41,7 +41,7 @@ class PdfWriter:
                 bm += 1
             for element in page.ordered_elements():
                 try:
-                    self._render(c, page, element)
+                    self._render(c, page, element, document)
                 except Exception:
                     logger.exception("Failed to render %s on page %d",
                                      element.kind, page.number)
@@ -72,9 +72,9 @@ class PdfWriter:
         else:
             c.setFillColor(RLColor(r, g, b))
 
-    def _render(self, c, page, element):
+    def _render(self, c, page, element, document=None):
         if element.kind == ElementKind.TEXT:
-            self._render_text(c, page, element)
+            self._render_text(c, page, element, document)
         elif element.kind == ElementKind.LINE:
             self._render_line(c, page, element)
         elif element.kind == ElementKind.IMAGE:
@@ -111,11 +111,21 @@ class PdfWriter:
                     p.close()
                 c.drawPath(p, stroke=stroked, fill=filled)
 
-    def _render_text(self, c, page, element):
+    def _font_name(self, element, document):
+        """ Resolve a base-14 PDF font from the element's AFP font resource (typeface
+        / character-set name carries weight/style), falling back to Helvetica. """
+        import fontmetrics
+        res = None
+        if document is not None and element.font_ref:
+            res = document.resource_library.get(element.font_ref)
+        charset = getattr(res, "char_set", None) or getattr(res, "coded_font", None)
+        return fontmetrics.base_font_for(charset) if charset else _DEFAULT_FONT
+
+    def _render_text(self, c, page, element, document=None):
         if not element.text:
             return
         size = element.font_size or 10.0
-        c.setFont(_DEFAULT_FONT, size)
+        c.setFont(self._font_name(element, document), size)
         self._set_color(c, element.color)
         x = element.position.x
         y = self._flip_y(page, element.position.y)

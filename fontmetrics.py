@@ -54,6 +54,30 @@ def base_font(family: str | None, bold=False, italic=False) -> str:
     return regular
 
 
+def advance_1000(ch: str, base: str) -> float:
+    """ Advance width of one character in 1/1000 em for a base font (== stringWidth at
+    size 1000). This is the unit stored in ``FontResource.metrics``. """
+    try:
+        return stringWidth(ch, base, 1000)
+    except Exception:
+        return 500.0
+
+
+def build_metrics(font) -> dict:
+    """ Build a ``{unicode_codepoint: advance_1/1000em}`` table for a FontResource from
+    its mapped base font, covering the characters the font's code page can represent.
+    Used so every character's exact width is captured in the model (precise window
+    extraction) and consistent on output. """
+    base = getattr(font, "typeface", None) or base_font_for(getattr(font, "char_set", None))
+    enc = getattr(font, "encoding_map", None) or {}
+    chars = set(enc.values()) if enc else {chr(c) for c in range(32, 127)}
+    metrics = {}
+    for ch in chars:
+        if ch:
+            metrics[ord(ch)] = advance_1000(ch, base)
+    return metrics
+
+
 def width(text: str, base: str, size: float) -> float:
     """ Exact width of text in points for a named base font. """
     if not text:
@@ -62,6 +86,24 @@ def width(text: str, base: str, size: float) -> float:
         return stringWidth(text, base, size)
     except Exception:
         return len(text) * size * 0.5
+
+
+def char_advances(text: str, size: float, font=None) -> list:
+    """ Per-character advance widths in points, using the font's captured metrics when
+    present (else base-font glyph metrics). Used for precise sub-run window extraction. """
+    if not text:
+        return []
+    metrics = getattr(font, "metrics", None) if font else None
+    if metrics:
+        return [metrics.get(ord(ch), 600) / 1000.0 * size for ch in text]
+    base = base_font_for(getattr(font, "char_set", None) if font else None)
+    out = []
+    for ch in text:
+        try:
+            out.append(stringWidth(ch, base, size))
+        except Exception:
+            out.append(size * 0.5)
+    return out
 
 
 def text_width(text: str, size: float, font=None) -> float:

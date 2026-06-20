@@ -48,10 +48,13 @@ class ParseOptions:
     record_types: set | None = None           # allow-list of record types (None = all)
     skip_record_types: set | None = None      # deny-list of record types
     resource_types: set | None = None         # allow-list of resource kinds (None = all)
+    skip_triplets: set | None = None           # triplet ids to skip decoding (None = all)
+    object_kinds: set | None = None            # allow-list of object kinds (image/graphic/barcode)
     level: ParseLevel = ParseLevel.ELEMENTS
     page_sink: PageSink | None = None
     retain_pages: bool = True                 # keep pages in the model after the sink
     threads: int = 1                          # parse worker threads (1 = serial)
+    font_path: str | None = None              # external AFP font-resource library dir
 
     def is_full_scope(self) -> bool:
         """ True when nothing limits the parse (so threading is safe to use). """
@@ -80,6 +83,16 @@ class ParseOptions:
 
     def wants_resource(self, resource_kind: str) -> bool:
         return self.resource_types is None or resource_kind in self.resource_types
+
+    def wants_triplet(self, tid: int) -> bool:
+        """ Whether to decode a triplet id. A process can skip triplets it doesn't need
+        (e.g. colour/finishing triplets when only text is required) to save time on
+        very large streams. Bytes are always consumed; only decoding is skipped. """
+        return not (self.skip_triplets and tid in self.skip_triplets)
+
+    def wants_object(self, kind: str) -> bool:
+        """ Whether to decode an object kind (image/graphic/barcode). """
+        return self.object_kinds is None or kind in self.object_kinds
 
 
 # Default options used when a caller does not supply any.

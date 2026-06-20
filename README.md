@@ -50,6 +50,7 @@ A process is an XML file of steps; run it with `python stream.py <process.xml>`:
 | [docs/model.md](docs/model.md) | The normalized memory model (documents, pages, elements, resources) |
 | [docs/printstreams.md](docs/printstreams.md) | Supported formats and per-format feature matrix |
 | [docs/spec.md](docs/spec.md) | `spec.xml`: identification, extraction fields, enhancements |
+| [docs/index-format.md](docs/index-format.md) | Page/document index record layouts (flat + JSON) |
 | [docs/markup.md](docs/markup.md) | PSML composition (overview; full grammar in [markup/SCHEMA.md](markup/SCHEMA.md)) |
 | [docs/barcodes.md](docs/barcodes.md) | Supported barcode symbologies and OMR |
 
@@ -74,22 +75,28 @@ Runnable process/spec/markup files are in [examples/](examples):
 
 - **Processes:** `transform`, `analyze`, `extract`, `merge`, `split`, `reorder`,
   `nup`, `edit`, `compose`, `labels`.
-- **Readers:** AFP (text, fonts, IOCA images, GOCA/BCOCA objects, overlays, page
-  segments, placement), PDF, PostScript, PCL, Metacode.
-- **Writers:** PDF, AFP, PostScript, PCL, Metacode.
-- **Selection:** by text, by hex id, or by window `(x, y, width, height)`.
+- **Readers:** AFP (text with colour/orientation, fonts with per-character metrics, IOCA
+  images, GOCA/BCOCA objects, overlays, page segments, tags, placement; every triplet
+  decoded), PDF, PostScript, PCL, Metacode.
+- **Writers:** PDF, AFP, PostScript, PCL, Metacode (fonts converted to each target).
+- **Indexes:** flat fixed-length records (default) or JSON; an index-driven AFP→AFP
+  `merge` streams pages straight from the input — see [docs/index-format.md](docs/index-format.md).
+- **Selection:** by text, by hex id, or by window `(x, y, width, height)` — windows clip
+  to exact characters using per-character widths.
 - **Barcodes:** Code 39 (3of9), Code 128 (incl. 128C), Code 93, QR, DataMatrix,
   USPS 4-State, and OMR marks.
-- **Cost controls:** page ranges, parse levels, record/resource filters, multi-threaded
-  AFP parsing.
-- **Compression:** 0–10 index-file compression, plus PDF internal (content-stream)
-  compression via `internal-compress` (custom AFP internal compression is on the
-  roadmap).
+- **Cost controls:** page ranges, parse levels, record/resource/triplet/object filters,
+  lazy model building, multi-threaded AFP parsing.
+- **Fonts:** per-character metrics from embedded FOCA, an external font library
+  (`font-path`), or a base-font fallback; source fonts converted to each target format.
+- **Compression:** flat indexes are uncompressed (default); optional 0–10 index-file
+  compression, plus PDF internal (content-stream) compression via `internal-compress`
+  (custom AFP internal compression is on the roadmap).
 
 ## Development
 
 ```bash
-python -m pytest          # 63 tests
+python -m pytest          # 82 tests
 python -m compileall .     # warning-free
 ```
 

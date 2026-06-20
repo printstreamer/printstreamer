@@ -66,6 +66,9 @@ def parse_options_from(cfg, **overrides) -> ParseOptions:
     opts.level = ParseLevel[level] if level in ParseLevel.__members__ else ParseLevel.ELEMENTS
     if cfg.opt("record_types"):
         opts.record_types = set(cfg.opt("record_types").split(","))
+    font_path = cfg.opt("font-path") or cfg.opt("font_path")
+    if font_path:
+        opts.font_path = font_path
     opts.threads = int(cfg.opt("threads", str(DEFAULT_THREADS)))
     for k, v in overrides.items():
         setattr(opts, k, v)
@@ -105,7 +108,7 @@ class StepConfig:
             return {"name": i.name, "format": i.format,
                     "compress": i.compress, "level": i.level}
         return {"name": _attr(self.step, "index"),
-                "format": _attr(self.step, "index_format", "json"),
+                "format": _attr(self.step, "index_format", "flat"),
                 "compress": _attr(self.step, "compress", "none"),
                 "level": int(_attr(self.step, "compress_level", "0"))}
 
@@ -204,23 +207,33 @@ def extract(step):
         pages_per_doc = int(cfg.opt("pages_per_document"))
     boundary = _boundary_spec(step) or cfg.boundary
 
+    # Lazy model: when no field/boundary needs element content, build the index by
+    # structural offset scan only (no element model) — far cheaper on huge streams.
+    needs_elements = bool(specs) or (boundary is not None and boundary.window is not None) \
+        or (boundary is not None and (boundary.text is not None or boundary.hex is not None))
+    extra = {} if (needs_elements or cfg.opt("level")) else {"level": ParseLevel.STRUCTURE}
+
     all_records = []
     for name, ftype in cfg.inputs():
         sink = IndexSink(name, specs=specs, pages_per_document=pages_per_doc,
                          boundary=boundary)
-        opts = parse_options_from(cfg, page_sink=sink, retain_pages=False)
+        opts = parse_options_from(cfg, page_sink=sink, retain_pages=False, **extra)
         parser = StreamParser(options=opts)
         parser.add_file(parser, name, file_type=ftype, type="input")
         parser.input_files[-1].parse()
         all_records.extend(sink.records)
 
-    # Page index (one record per page) and document index (one per document).
-    page_data = index_mod.serialize(all_records, fmt)
+    # Page index (one record per page) and document index (one per document). The doc
+    # index needs the page field names to size the page index file for its pi_* offsets.
+    page_field_names = index_mod._field_names(all_records)
+    page_data = index_mod.serialize(all_records, fmt, kind="page")
     page_out = compression.write_file(index_path, page_data, codec=codec, level=level)
     doc_records = index_mod.document_index_from_pages(all_records)
     doc_path = _doc_index_path(index_path)
     doc_out = compression.write_file(
-        doc_path, index_mod.serialize(doc_records, fmt), codec=codec, level=level)
+        doc_path, index_mod.serialize(doc_records, fmt, kind="doc",
+                                      page_field_names=page_field_names),
+        codec=codec, level=level)
     print(f"  Extracted {len(all_records)} page records -> {page_out}")
     print(f"  Extracted {len(doc_records)} document records -> {doc_out}")
     return all_records
@@ -246,27 +259,42 @@ def transform(step):
 
 def merge(step):
     """ Build output(s) from an index file: content/order driven by index records,
-    with optional chunking, transform (output format), and enhancement. """
+    with optional chunking, transform (output format), and enhancement.
+
+    Two paths (see plan §4):
+      * **Streaming passthrough** when the output format equals the source format and
+        no model-level work is requested (no transform, no spec ops, no chunking, no
+        element-level enhancements). Records are copied straight from the input by
+        byte span; record-level deletions are applied on the fly. No model is built.
+      * **Model path** otherwise: re-parse only the referenced spans into the model,
+        apply enhancements/ops, and write via the target writer.
+    """
     cfg = StepConfig(step)
     index = cfg.index()
     fmt = index["format"]
     index_path = index["name"] or ("index." + fmt)
-    records = index_mod.load(compression.read_file(index_path), fmt)
+    records = index_mod.load(compression.read_file(index_path), fmt, kind="page")
     outputs = cfg.outputs()
     if not outputs:
         raise ValueError("merge step requires an output file")
     out_name, out_type = outputs[0]
     chunk_pages = int(cfg.opt("chunk_pages")) if cfg.opt("chunk_pages") else None
-
-    # Re-parse each source only over the page span the index needs.
-    page_index = _build_page_index(records)
-
-    # Assemble output documents in index-record order, applying enhancements. A
-    # spec.xml may add/delete elements per page, with the index record's fields
-    # available for {field} substitution.
     enhancements = _enhancements(step)
-    from process import operations
     spec_ops = cfg.operations
+
+    # Streaming passthrough: same format, no model work needed. Only whole-record
+    # (hex) deletions can be honoured without a model; richer edits use the model.
+    hex_deletes = [arg for kind, arg in enhancements if kind == "delete_hex"]
+    complex_enh = any(kind != "delete_hex" for kind, _ in enhancements)
+    same_format = all(_source_type(r.source) == out_type for r in records) and records
+    if same_format and not spec_ops and not complex_enh and not chunk_pages:
+        written = _merge_streaming(records, out_name, hex_deletes)
+        print(f"  Merged {len(records)} records (streaming passthrough) -> {written[0]}")
+        return written
+
+    # Model path: re-parse each source only over the page span the index needs.
+    page_index = _build_page_index(records)
+    from process import operations
     out_set = StreamDocumentSet()
     cur_doc = None
     cur_docno = None
@@ -297,6 +325,72 @@ _EXT_TYPE = {".pdf": "pdf", ".ps": "ps", ".eps": "ps", ".pcl": "pcl",
 def _source_type(path):
     import os
     return _EXT_TYPE.get(os.path.splitext(path)[1].lower(), "afp")
+
+
+def _merge_streaming(records, out_name, hex_deletes):
+    """ Stream output by copying each page's byte span straight from its source file,
+    grouped into documents in index order. Record-level (hex) deletions are applied on
+    the fly. The document envelope (BDT/EDT) is emitted around each document's pages.
+    No model is built — O(referenced bytes) memory. """
+    from writer.afp_writer import _sf, _name8
+
+    sources = {}
+
+    def src(path):
+        if path not in sources:
+            with open(path, "rb") as fh:
+                sources[path] = fh.read()
+        return sources[path]
+
+    out = bytearray()
+    cur_key = None
+    cur_name = None
+    open_doc = False
+    for r in records:
+        key = (r.source, r.document_offset)
+        if key != cur_key:
+            if open_doc:
+                out += _sf("EDT", _name8(cur_name))
+            cur_key = key
+            cur_name = r.document_name or f"DOC{(r.document_offset or 0) + 1:05d}"
+            out += _sf("BDT", _name8(cur_name))
+            open_doc = True
+        data = src(r.source)
+        if r.byte_offset is None or r.byte_count is None:
+            continue
+        span = data[r.byte_offset:r.byte_offset + r.byte_count]
+        if hex_deletes:
+            span = _delete_records_by_hex(span, hex_deletes)
+        out += span
+    if open_doc:
+        out += _sf("EDT", _name8(cur_name))
+    with open(out_name, "wb") as fh:
+        fh.write(out)
+    return [out_name]
+
+
+def _iter_afp_records(data):
+    """ Yield (offset, length) for each AFP structured field in ``data``. """
+    import struct
+    i, n = 0, len(data)
+    while i + 6 <= n and data[i:i + 1] == b"\x5a":
+        length = struct.unpack(">H", data[i + 1:i + 3])[0] + 1
+        if length <= 0 or i + length > n:
+            break
+        yield i, length
+        i += length
+
+
+def _delete_records_by_hex(span, hex_patterns):
+    """ Drop any structured field whose bytes contain one of the hex patterns. """
+    pats = [bytes.fromhex(h.replace(" ", "")) for h in hex_patterns if h]
+    out = bytearray()
+    for off, length in _iter_afp_records(span):
+        rec = span[off:off + length]
+        if any(p in rec for p in pats):
+            continue
+        out += rec
+    return bytes(out)
 
 
 def _enhancements(step):
@@ -423,7 +517,7 @@ def split(step):
     cfg = StepConfig(step)
     index = cfg.index()
     fmt = index["format"]
-    records = index_mod.load(compression.read_file(index["name"]), fmt)
+    records = index_mod.load(compression.read_file(index["name"]), fmt, kind="page")
     key_field = cfg.opt("key")
     pattern = (cfg.outputs()[0][0] if cfg.outputs() else None) or cfg.opt("output", "split_{key}.pdf")
     out_type = (cfg.outputs()[0][1] if cfg.outputs() else None) or cfg.opt("output_type", "pdf")
@@ -500,7 +594,7 @@ def labels(step):
     index_path = index["name"]
     if not index_path:
         raise ValueError("labels step requires an index file with the label data")
-    records = index_mod.load(compression.read_file(index_path), index["format"])
+    records = index_mod.load(compression.read_file(index_path), index["format"], kind="page")
     stock = cfg.opt("stock", "avery-5160")
     template_node = step.getElementsByTagName("label")
     if template_node:

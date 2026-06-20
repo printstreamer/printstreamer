@@ -28,8 +28,7 @@ class AFP_TLE:
 
         :param bytes data: Record data
         """
-        pass
-        # self.Triplets = unpack(f">{len(self.Triplets)}s", data)
+        self.segment.objects.tag_logical_element(data)
 
     def format(self):
         """ Format the data from the record class fields into a record.

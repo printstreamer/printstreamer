@@ -28,12 +28,17 @@ every other capability operates on one normalized model.
 - **Readers** — `stream_segment_{afp,pdf,ps,pcl,metacode}.py` parse a source into the
   model. AFP parses by byte range (and in parallel); the rest parse by page.
   Format-specific record/order logic lives in [afp/](../afp), [postscript/](../postscript),
-  [pcl/](../pcl), and [metacode/](../metacode).
+  [pcl/](../pcl), and [metacode/](../metacode). AFP uses **one shared, table-driven
+  decoder** ([afp/structured_field.py](../afp/structured_field.py)) plus a complete triplet
+  engine ([afp/triplets.py](../afp/triplets.py)) and a font resolver
+  ([afp/fonts.py](../afp/fonts.py)) — the per-record classes are thin delegates.
 - **Model** — [model/](../model) defines the normalized document model and the
   selection/edit visitor. See [model.md](model.md).
-- **Process layer** — [process/](../process): `index` (identification + index files),
-  `operations` (extract/delete/modify/add), `merge` (index-driven merge/split),
-  `imposition` (n-up + rotation), `parallel` (threaded AFP), `stats`, `dump`, `spec`.
+- **Process layer** — [process/](../process): `index` (identification + flat/JSON index
+  files; see [index-format.md](index-format.md)), `operations` (extract/delete/modify/add),
+  `runner` (index-driven merge/split — incl. a no-model **streaming passthrough** that
+  copies page byte spans straight from the input), `imposition` (n-up + rotation),
+  `parallel` (threaded AFP), `stats`, `dump`, `spec`.
 - **Composition** — [markup/](../markup) turns PSML into the model (loader + layout
   engine). See [markup.md](markup.md).
 - **Writers** — [writer/](../writer) render the model to each format; selected via

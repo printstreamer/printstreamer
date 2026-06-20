@@ -16,9 +16,15 @@ def _esc(text):
     return text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
 
 
-def _font(base):
-    # Reportlab base-14 names map directly to the PostScript standard fonts.
-    return base or "Helvetica"
+def _font_name(document, element):
+    """ Resolve a text element's font to a PostScript standard font name via the AFP
+    character-set carried on its FontResource (base-14 names map 1:1 to PS fonts). """
+    import fontmetrics
+    res = None
+    if document is not None and element.font_ref:
+        res = document.resource_library.get(element.font_ref)
+    charset = getattr(res, "char_set", None) or getattr(res, "coded_font", None)
+    return fontmetrics.base_font_for(charset) if charset else "Helvetica"
 
 
 class PsWriter:
@@ -33,7 +39,7 @@ class PsWriter:
             out.append(f"%%Page: {pageno} {pageno}")
             out.append(f"<< /PageSize [{page.width or 612:.0f} {h:.0f}] >> setpagedevice")
             for el in page.ordered_elements():
-                self._emit(out, el, h)
+                self._emit(out, el, h, _document)
             out.append("showpage")
         out.append("%%EOF")
         with open(path, "w", encoding="latin-1", errors="replace") as fh:
@@ -45,10 +51,10 @@ class PsWriter:
             r, g, b = color.to_rgb()
             out.append(f"{r:.3f} {g:.3f} {b:.3f} setrgbcolor")
 
-    def _emit(self, out, el, h):
+    def _emit(self, out, el, h, document=None):
         if el.kind == ElementKind.TEXT and el.text:
             self._rgb(out, el.color)
-            out.append(f"/{_font(el.font_ref)} findfont {el.font_size or 10:.2f} scalefont setfont")
+            out.append(f"/{_font_name(document, el)} findfont {el.font_size or 10:.2f} scalefont setfont")
             out.append(f"{el.position.x:.2f} {h - el.position.y:.2f} moveto ({_esc(el.text)}) show")
         elif el.kind == ElementKind.LINE:
             self._rgb(out, el.color)

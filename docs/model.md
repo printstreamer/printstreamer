@@ -19,7 +19,7 @@ and `raw` (preserved source bytes, used for hex selection).
 
 | Element | Key fields |
 |---|---|
-| `TextElement` | `text`, `position`, `font_ref`, `font_size`, `color`, `orientation`, `raw_text_bytes` |
+| `TextElement` | `text`, `position`, `font_ref`, `font_size`, `color`, `orientation`, `raw_text_bytes`; `attributes["char_advances"]` holds per-character widths (points) for precise sub-run window extraction |
 | `LineElement` | `start`, `end`, `weight`, `color` |
 | `ImageElement` | `resource_ref` or inline `data`, `encoding`, `dpi`, `colorspace` |
 | `GraphicElement` | `ops` (normalized `DrawOp`s: box/ellipse/polyline/path), `stroke`, `fill` |
@@ -29,7 +29,9 @@ and `raw` (preserved source bytes, used for hex selection).
 
 ## Resources ([model/resource.py](../model/resource.py))
 
-`FontResource` (coded font ↔ code page, metrics, encoding map), `ImageResource`,
+`FontResource` (coded font ↔ code page, `size`, `encoding_map` code-point→Unicode, and
+`metrics` code-point→advance in 1/1000 em — resolved from embedded FOCA, an external font
+library, or the mapped base font; see [afp/fonts.py](../afp/fonts.py)), `ImageResource`,
 `OverlayResource`, `PageSegmentResource`, `ColorTableResource`, and `RawResource`
 (unknown resources kept byte-for-byte). The `ResourceLibrary` deduplicates by name and
 ref-counts so writers emit only what is used.
@@ -46,6 +48,8 @@ The format-agnostic engine behind extraction, deletion, and identification:
 - `select_by_text(scope, pattern, regex=False)` — match a TextElement's text
 - `select_by_hex(scope, hex)` — match an element's source/encoded bytes
 - `select_in_window(scope, Rect)` — elements whose bbox falls in a window
+- `text_in_window(element, Rect)` — clip a text run to exactly the in-window characters
+  (using `char_advances`)
 - `iter_elements`, `remove`, `replace`, `add`
 
 A *scope* is a `Page`, `Document`, `StreamDocumentSet`, or list thereof.
