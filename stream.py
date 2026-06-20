@@ -46,7 +46,19 @@ def main(argv=None):
                         format="%(levelname)s %(name)s: %(message)s")
     from process import runner
     runner.DEFAULT_THREADS = args.threads
-    run_process(args.process, start=args.start, stop=args.stop)
+    try:
+        run_process(args.process, start=args.start, stop=args.stop)
+    except PermissionError as exc:
+        name = exc.filename or "the output file"
+        print(f"\nError: cannot write '{name}' - permission denied.\n"
+              f"  It is most likely open in another application (e.g. a PDF viewer) or "
+              f"read-only.\n  Close any app holding it open, or choose a different output "
+              f"name, and re-run.", file=sys.stderr)
+        return 1
+    except OSError as exc:
+        name = getattr(exc, "filename", None) or "a file"
+        print(f"\nError: I/O failure on '{name}': {exc.strerror or exc}.", file=sys.stderr)
+        return 1
     return 0
 
 
