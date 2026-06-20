@@ -31,12 +31,12 @@ class AFP_BDI:
         :param bytes data: Record data
         """
         pass
-        # self.IndxName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
+        # self.IndxName, self.Triplets = unpack(f">8s{len(self.Triplets)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">8s{self.Triplets.len()}s", self.IndxName, self.Triplets)
+        data = pack(f">8s{len(self.Triplets)}s", self.IndxName, self.Triplets)
         return data

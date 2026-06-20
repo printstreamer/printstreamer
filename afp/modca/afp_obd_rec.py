@@ -28,13 +28,13 @@ class AFP_OBD:
 
         :param bytes data: Record data
         """
-        pass
-        # self.Triplets = unpack(f">{self.Triplets.len()}s", data)
+        self.segment.objects.set_object_descriptor(data)
+        # self.Triplets = unpack(f">{len(self.Triplets)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">{self.Triplets.len()}s", self.Triplets)
+        data = pack(f">{len(self.Triplets)}s", self.Triplets)
         return data

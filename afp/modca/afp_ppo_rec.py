@@ -40,12 +40,12 @@ class AFP_PPO:
         :param bytes data: Record data
         """
         pass
-        # self.RGLength, self.ObjType, self.Reserved_1, self.ObjOrent, self.XocaOset, self.YocaOset, self.Reserved_2 = unpack(f">H1s2s1sxhxh{self.Reserved_2.len()}s", data)
+        # self.RGLength, self.ObjType, self.Reserved_1, self.ObjOrent, self.XocaOset, self.YocaOset, self.Reserved_2 = unpack(f">H1s2s1sxhxh{len(self.Reserved_2)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">H1s2s1sxhxh{self.Reserved_2.len()}s", self.RGLength, self.ObjType, self.Reserved_1, self.ObjOrent, self.XocaOset, self.YocaOset, self.Reserved_2)
+        data = pack(f">H1s2s1sxhxh{len(self.Reserved_2)}s", self.RGLength, self.ObjType, self.Reserved_1, self.ObjOrent, self.XocaOset, self.YocaOset, self.Reserved_2)
         return data

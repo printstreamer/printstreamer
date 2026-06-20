@@ -1,9 +1,10 @@
 """ AFP-specific literals and code. """
 
+import importlib
+import logging
+import pathlib
 
-#import afp_bag_rec
-#from afp_bpg_rec import AFP_BPG
-#from afp_ptx_rec import AFP_PTX
+logger = logging.getLogger(__name__)
 
 
 afp_record_types = [
@@ -30,7 +31,7 @@ afp_record_types = [
     {"type": "CAT", "code": "D3B077", "value": b"\xd3\xb0\x77", "architecture": "modca", "description": "Color Attribute Table"},
     {"type": "CDD", "code": "D3A692", "value": b"\xd3\xa6\x92", "architecture": "modca", "description": "Container Data Descriptor"},
     {"type": "EAG", "code": "D3A9C9", "value": b"\xd3\xa9\xc9", "architecture": "modca", "description": "End Active Environment Group"},
-    {"type": "EAG", "code": "D3A9EB", "value": b"\xd3\xa9\xeb", "architecture": "modca", "description": "End Active Environment Group"},
+    {"type": "EBC", "code": "D3A9EB", "value": b"\xd3\xa9\xeb", "architecture": "modca", "description": "End Bar Code Object"},
     {"type": "ECA", "code": "D3A977", "value": b"\xd3\xa9\x77", "architecture": "modca", "description": "End Color Attribute Table"},
     {"type": "EDG", "code": "D3A9C4", "value": b"\xd3\xa9\xc4", "architecture": "modca", "description": "End Document Environment Group"},
     {"type": "EDI", "code": "D3A9A7", "value": b"\xd3\xa9\xa7", "architecture": "modca", "description": "End Document Index"},
@@ -113,32 +114,24 @@ afp_record_types = [
     {"type": "BDD", "code": "D3A6EB", "value": b"\xd3\xa6\xeb", "architecture": "bcoca", "description": "Bar Code Data Descriptor"},
     ]
 
-# Setup afp record type lookup.
-#afp_rec_type = []
-#for x in xrange(256):
-#    afp_rec_type.append([])
-#    for y in xrange(256):
-#        afp_rec_type[x].append(None)
-#for afp_record_type in afp_record_types:
-#    #xint = int(afp_record_type["value"][1:2], 16)
-#    #xint = chr(int(afp_record_type["value"][2:3], base=16)) + chr(int(afp_record_type["value"][2:3], base=16))
-#    xint = afp_record_type["code"][2:4].decode("hex")
-#    print
-#    afp_rec_type[xint][yint] = afp_record_type
-#    #afp_rec_type[afp_record_type["value"][1:2]][afp_record_type["value"][2:3]] = afp_record_type
-#    #wrk_str.encode("hex") and wrk_str.decode("hex") 
+# Index record-class modules by basename so we can import them by dotted path,
+# regardless of which architecture subpackage (modca/ptoca/foca/...) they live in.
+_afp_pkg = pathlib.Path(__file__).parent / "afp"
+_afp_module_paths = {
+    p.stem: f"afp.{p.parent.name}.{p.stem}"
+    for p in _afp_pkg.rglob("afp_*_rec.py")
+}
 
+# Setup afp record type lookup, importing each record's parser class.
 afp_rec_type = {}
 afp_rec_type_text = {}
 for afp_record_type in afp_record_types:
-    if afp_record_type["type"] == "BCF":
-        pause = True
     rec_type_class_file = f'afp_{afp_record_type["type"].lower()}_rec'
     rec_type_class_name = f'AFP_{afp_record_type["type"]}'
-    exec(f'import {rec_type_class_file}')
-    exec(f'afp_record_type["module"] = {rec_type_class_file}')
-    exec(f'afp_record_type["class"] = {rec_type_class_file}.{rec_type_class_name}')
-    #afp_rec_type[afp_record_type["code"]] = afp_record_type
+    dotted = _afp_module_paths[rec_type_class_file]
+    module = importlib.import_module(dotted)
+    afp_record_type["module"] = module
+    afp_record_type["class"] = getattr(module, rec_type_class_name)
     afp_rec_type[afp_record_type["value"]] = afp_record_type
     afp_rec_type_text[afp_record_type["type"]] = afp_record_type
 

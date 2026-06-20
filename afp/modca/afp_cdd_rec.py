@@ -33,12 +33,12 @@ class AFP_CDD:
         :param bytes data: Record data
         """
         pass
-        # self.Reserved_1, self.Triplets = unpack(f">12s{self.Triplets.len()}s", data)
+        # self.Reserved_1, self.Triplets = unpack(f">12s{len(self.Triplets)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">12s{self.Triplets.len()}s", self.Reserved_1, self.Triplets)
+        data = pack(f">12s{len(self.Triplets)}s", self.Reserved_1, self.Triplets)
         return data

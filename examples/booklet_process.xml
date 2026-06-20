@@ -1,0 +1,6 @@
+<!-- The process file just names each step and points it at a spec.xml. All process
+     options (files, identification, fields, enhancements, imposition) live in the
+     spec, keeping process files small and the specifications reusable. -->
+<process>
+    <step name="nup" spec="examples/booklet_spec.xml"/>
+</process>

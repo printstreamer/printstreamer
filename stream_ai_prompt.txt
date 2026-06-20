@@ -2,3 +2,58 @@ Create a python 3.13 application that can parse AFP input files, parsing and ret
 
 
 Create a python 3.13 application that can parse AFP and PDF input files,
+
+
+Analyze the code in this project folder.  This project is meant to enable parsing of printstream files including afp, metacode, pdf, pcl, and postscript, down to the base parameter level.  It should store the parsed data from each printstream type into a generic memory model, including font, image, line, graphic, form, overlay, text, barcode, document, page, resource, and all other information of every kind.  It should enable extraction, modification, and removal of any existing text, graphics, or any other kind of element or resource.  It should also enable adding any kind of document element of any of those types, and any other valid types, to the printstreams.  It should enable identification of pages and documents. It should also enable multipass processing of printstreams such as an initial index and extraction process, followed by one or more later merge processes, where the original pages and documents can be split into multiple output printstreams, enhanced, pages within documents reordered for printing requirements, nup printing supported by reordering pages and merging multiple original pages into the same output pages for commercial printers, etc.  It should provide a label printing utility to generate nup labels for common label types.  It should enable transformation of printstreams into any other printstream.  It should provide for the generation of printstreams based on a markup language.  Many of these functionalities are already started in the code in this project.  Create a plan to build upon the existing code and framework to meet the rest of these requirements.
+
+Enable users to identify documents by page count or any kind of printstream element including index records, specific printstream record types, text, image, or other element types or values, etc.  Generate an index output file whenever parsing a printstream that includes any extracted data requested by the user, document page counts, document offset in the printstream by byte, page, document, record.  The merging of output files later on will be based on the index records to retrieve the documents/pages selected by the user in the index file record order into the selected output file, optionally being enhanced and or transformed when merging.  Enable extraction and optional deleting of text, barcodes, etc. based on printstream hex or text strings, or by window coordinates (x,y origin then window height and width).
+
+In order to do window-based data extraction, every parsed page graphical element (including text, images, barcodes, etc) must have the x,y start point for it available during the parsing (requiring a full parse of page graphical elements), and the same window info (x,y start and window height and width) should be saved to the memory model during parsing.  Enable dumping of the memory model to a file if requested by the user.  Also handle memory carefully, by not storing too much at a time and pushing to storage cache or whatever is fastest and most efficient if needed.  Users need to be able to identify the level of parsing, depending on their needs, to reduce the level of effort, space, and time of the parsing.  They can specify the start and end (or number of) pages to parse, the record types to parse, the resource types to parse, etc.  There should also be an option to compress the output file in whatever format, with levels of compression from 0-10.  Users should be able to specify the format of the index files, such as text, csv, tab, xml, or json.  The label files should be created by the printstream generation tool, driven by an index file that contains the label info.  Some of the processes supported by stream.py will be:  analyze (just parse and display the parsed output and report stats and info on the printstream), extract (parse and create index output file with extracted data), merge (driven by an index file from an extraction, create one or more output files with the document content and order driven by the index records, and optionally chunking outputs by size, transforming them, enhancing by adding elements, deleting elements, etc.), compose (actually create an original printstream file or files, and the associated document and page index files, based on a markup input file).
+
+In addition to the document index created, there should also be a page index created.  This facilitates the reordering of pages and nup of pages.  The precise length of each text stream must be computed during the parse, based on the font metrics and the characters displayed, to facilitate the window-based text extraction, and providing the text element window to the memory model.
+
+Enable multi-threaded parsing and writing to speed things up, wherever that is feasible.  For example, large printstreams could have multiple threads start at different places in the file, find the next record, page and document break, and then begin parsing and indexing in earnest from that point.  The threads could then concatenate and reconcile later to make sure everything was correct, complete, and in the right order.  The user would have control of default or a specified number of threads, up to the max the system can support.
+
+Which markup file format would provide the most comprehensive, precise, and feature rich document generation, including flowing and wrapping text columns and pages, page and column and section headers and footers, widow orphan control, font, image, line, graphic color,and all other document elements?  What do you think about using a custom XML vocabulary inspired by XSL-FO, rather than XSL-FO itself.
+
+A custom XML schema can include everything you need, for example:
+
+<document>
+<page>
+<section>
+<flow>
+<paragraph>
+<span>
+<table>
+<image>
+<line>
+<rectangle>
+<ellipse>
+<polygon>
+<path>
+<barcode>
+<font>
+<color>
+<header>
+<footer>
+<footnote>
+<annotation>
+<bookmark>
+<layer>
+<style>
+<master-page>
+<page-sequence>
+
+You can also add AFP-specific concepts such as overlays, medium maps, page segments, object containers, and structured fields while retaining XSL-FO's strengths like automatic text flow, pagination, and keep constraints.
+
+This approach gives you a semantically rich intermediate format that can be rendered to PDF, HTML, or other outputs without being constrained by an existing specification.  Design and implement this markup language, with support for all the parameters needed for each tag, using printer points as the unit of measure.
+
+Complete the PCL/Metacode writers, pixel-level GOCA/IOCA image decode, and deeper PostScript interpreter coverage.
+
+Make sure the users have a way via the process xml files to specify a spec.xml (specification) file for each process, that defines all the options for that process, including input printstream, PSML and index files, output printstream and index files, and identifying documents, data/extraction fields with associated windows or hex/text id's etc., deleting fields, adding text, images, all popular barcodes including 3of9, 128c, 2d, OMR marks, etc, graphics, lines, images, overlays, and any other kind of printstream enhancement, similar to what we would be able to generate from PSML if composing an original printstream.  The spec file will need to enable the user to have total control of the nup/imposition, such as rotation of pages as part of nup/imposition, order, scaling, orientation, and layout of input document pages for each nup output page (refer to last page as "n" and enable reference of "n-1", "n-2", etc).
+
+Document this project thoroughly with the README.md file being the overview, and linking to docs/* for detailed documentation on each process and major component, each of the processes, the normalized memory model, supported printstreams and features, the process utility,  create examples of each.
+
+Has every task, phase, and request been completed?  Please verify carefully.  If not, please complete them.  If so, please validate the full project for any issues.  Also evaluate the whole project in the role of a reviewer to identify and fix any issues that should be caught in a code review.
+
+In addition to whatever compression options you have already enabled.  I want to be able to do internal compression.  This would initially only apply to pdf.  It would control the internal compression of the pdf objects (see the capabilities option within the pdf writer tool).  Eventually I would like to design a custom AFP compression method that is also internal to the file, but just document it as a roadmap item for now.

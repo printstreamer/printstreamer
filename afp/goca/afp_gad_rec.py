@@ -28,7 +28,7 @@ class AFP_GAD:
 
         :param bytes data: Record data
         """
-        pass
+        self.segment.objects.add_object_data(data)
         # self.GOCAdat = unpack(f">8s", data)
 
     def format(self):

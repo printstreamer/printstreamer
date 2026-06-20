@@ -1,0 +1,9 @@
+<!-- 2-up imposition onto a landscape Letter sheet, rotating each source page 90
+     degrees (booklet-style). Margins and gutters are in points. -->
+<process>
+    <step name="nup" rows="1" cols="2" page-size="letter" rotate="90"
+          margin-top="18" margin-left="18" h-gap="12">
+        <file name="test_afp.afp" file_type="afp" type="input"/>
+        <file name="booklet.pdf" file_type="pdf" type="output"/>
+    </step>
+</process>

@@ -86,7 +86,7 @@ class AFP_OBP:
 
         :param bytes data: Record data
         """
-        pass
+        self.segment.objects.set_object_position(data)
         # self.OAPosID, self.RGLength, self.XoaOset, self.YoaOset, self.XoaOrent, self.YoaOrent, self.Reserved_1, self.XocaOset, self.YocaOset, self.XocaOrent, self.YocaOrent, self.RefCSys = unpack(f">1sBxhxh2s2s1sxhxh2s2s1s", data)
 
     def format(self):

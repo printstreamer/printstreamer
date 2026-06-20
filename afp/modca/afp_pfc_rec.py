@@ -35,12 +35,12 @@ class AFP_PFC:
         :param bytes data: Record data
         """
         pass
-        # self.Reserved_1, self.PFCFlgs, self.Reserved_2, self.Triplets = unpack(f">1s1s2s{self.Triplets.len()}s", data)
+        # self.Reserved_1, self.PFCFlgs, self.Reserved_2, self.Triplets = unpack(f">1s1s2s{len(self.Triplets)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">1s1s2s{self.Triplets.len()}s", self.Reserved_1, self.PFCFlgs, self.Reserved_2, self.Triplets)
+        data = pack(f">1s1s2s{len(self.Triplets)}s", self.Reserved_1, self.PFCFlgs, self.Reserved_2, self.Triplets)
         return data

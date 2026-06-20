@@ -31,12 +31,12 @@ class AFP_MBC:
         :param bytes data: Record data
         """
         pass
-        # self.RGLength, self.Triplets = unpack(f">H{self.Triplets.len()}s", data)
+        # self.RGLength, self.Triplets = unpack(f">H{len(self.Triplets)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">H{self.Triplets.len()}s", self.RGLength, self.Triplets)
+        data = pack(f">H{len(self.Triplets)}s", self.RGLength, self.Triplets)
         return data

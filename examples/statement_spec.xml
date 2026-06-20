@@ -1,0 +1,29 @@
+<!-- A reusable specification: how to identify documents, what to extract, and how
+     to enhance pages. Referenced by a process step via spec="statement_spec.xml". -->
+<spec>
+    <!-- Start a new document on each page whose top band contains a heading. Other
+         options: by="page-count" pages="2"; by="text" value="STATEMENT";
+         by="hex" value="d3eeeb". -->
+    <identify by="window" value="0,0,612,72"/>
+
+    <!-- Named extraction fields located by window, text, or hex id. -->
+    <fields>
+        <field name="heading" window="0,0,612,72"/>
+        <field name="account" window="430,90,140,16"/>
+        <field name="has_barcode" hex="d3eeeb"/>
+    </fields>
+
+    <!-- Page enhancements (same vocabulary as composing from PSML). {field} values
+         are substituted from the index record when used during merge. -->
+    <enhancements>
+        <delete kind="barcode" window="400,40,170,40"/>
+        <add kind="text" x="72" y="60" size="9" color="#cc0000">Processed: {heading}</add>
+        <add kind="barcode" symbology="code128" x="400" y="40" width="160" height="36" data="{account}"/>
+        <add kind="barcode" symbology="qr" x="540" y="700" width="48" height="48" data="{account}"/>
+        <add kind="omr" x="18" y="80" width="8" height="240" data="101101"/>
+        <add kind="line" x1="72" y1="96" x2="540" y2="96" weight="1" color="#000000"/>
+        <add kind="rectangle" x="72" y="110" width="200" height="40" fill="#eeeeee"/>
+        <add kind="image" src="logo.png" x="72" y="700" width="120" height="48"/>
+        <add kind="overlay" name="LETTERHD" x="0" y="0"/>
+    </enhancements>
+</spec>

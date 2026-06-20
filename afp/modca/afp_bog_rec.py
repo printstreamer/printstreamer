@@ -32,12 +32,12 @@ class AFP_BOG:
         :param bytes data: Record data
         """
         pass
-        # self.OEGName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
+        # self.OEGName, self.Triplets = unpack(f">8s{len(self.Triplets)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">8s{self.Triplets.len()}s", self.OEGName, self.Triplets)
+        data = pack(f">8s{len(self.Triplets)}s", self.OEGName, self.Triplets)
         return data

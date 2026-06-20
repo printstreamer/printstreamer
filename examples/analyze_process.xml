@@ -1,0 +1,7 @@
+<!-- Parse and report statistics; dump the parsed model to JSON.
+     Scope/level/threads are optional cost controls. -->
+<process>
+    <step name="analyze" dump="model.json" level="elements" pages="1-3" threads="4">
+        <file name="test_afp.afp" file_type="afp" type="input"/>
+    </step>
+</process>

@@ -94,12 +94,12 @@ class AFP_IOB:
         :param bytes data: Record data
         """
         pass
-        # self.ObjName, self.Reserved_1, self.ObjType, self.XoaOset, self.YoaOset, self.XoaOrent, self.YoaOrent, self.XocaOset, self.YocaOset, self.RefCSys, self.Triplets = unpack(f">8s1s1sxhxh2s2sxhxh1s{self.Triplets.len()}s", data)
+        # self.ObjName, self.Reserved_1, self.ObjType, self.XoaOset, self.YoaOset, self.XoaOrent, self.YoaOrent, self.XocaOset, self.YocaOset, self.RefCSys, self.Triplets = unpack(f">8s1s1sxhxh2s2sxhxh1s{len(self.Triplets)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">8s1s1sxhxh2s2sxhxh1s{self.Triplets.len()}s", self.ObjName, self.Reserved_1, self.ObjType, self.XoaOset, self.YoaOset, self.XoaOrent, self.YoaOrent, self.XocaOset, self.YocaOset, self.RefCSys, self.Triplets)
+        data = pack(f">8s1s1sxhxh2s2sxhxh1s{len(self.Triplets)}s", self.ObjName, self.Reserved_1, self.ObjType, self.XoaOset, self.YoaOset, self.XoaOrent, self.YoaOrent, self.XocaOset, self.YocaOset, self.RefCSys, self.Triplets)
         return data

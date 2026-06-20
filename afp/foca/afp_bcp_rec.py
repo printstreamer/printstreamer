@@ -1,7 +1,7 @@
 """ AFP BCP Record - Begin Code Page """
 
 from struct import pack
-from afp_foca_triplet import AFP_FOCA_Triplet
+from afp.foca.afp_foca_triplet import AFP_FOCA_Triplet
 from stream_field_afp import StreamFieldAFP
 
 

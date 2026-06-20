@@ -16,9 +16,11 @@ class StreamRecordAFP:
         
     def parse(self):
         """ Parse a printstream record. """
-        # Parse record types.
+        # Skip the structured-field introducer: carriage control (1) + length (2)
+        # + identifier (3) + flags (1) + sequence (2) = 9 bytes. The remainder is
+        # the structured-field data the record class knows how to parse.
         start = 9
-        length = self.length - start
-        data = self.data[start:length]
+        data = self.data[start:self.length]
         rec = afp_rec_type_text[self.type]["class"](self.segment)
         rec.parse(data)
+        return rec

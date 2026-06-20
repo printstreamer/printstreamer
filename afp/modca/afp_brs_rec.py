@@ -32,12 +32,12 @@ class AFP_BRS:
         :param bytes data: Record data
         """
         pass
-        # self.RSName, self.Reserved_1, self.Reserved_2 = unpack(f">8s2s{self.Reserved_2.len()}s", data)
+        # self.RSName, self.Reserved_1, self.Reserved_2 = unpack(f">8s2s{len(self.Reserved_2)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">8s2s{self.Reserved_2.len()}s", self.RSName, self.Reserved_1, self.Reserved_2)
+        data = pack(f">8s2s{len(self.Reserved_2)}s", self.RSName, self.Reserved_1, self.Reserved_2)
         return data

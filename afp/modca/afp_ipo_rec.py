@@ -51,13 +51,13 @@ class AFP_IPO:
 
         :param bytes data: Record data
         """
-        pass
-        # self.OvlyName, self.XolOset, self.YolOset, self.OvlyOrent, self.Triplets = unpack(f">8sxhxh2s{self.Triplets.len()}s", data)
+        self.segment.objects.include_overlay(data)
+        # self.OvlyName, self.XolOset, self.YolOset, self.OvlyOrent, self.Triplets = unpack(f">8sxhxh2s{len(self.Triplets)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">8sxhxh2s{self.Triplets.len()}s", self.OvlyName, self.XolOset, self.YolOset, self.OvlyOrent, self.Triplets)
+        data = pack(f">8sxhxh2s{len(self.Triplets)}s", self.OvlyName, self.XolOset, self.YolOset, self.OvlyOrent, self.Triplets)
         return data

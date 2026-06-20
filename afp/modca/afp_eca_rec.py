@@ -32,12 +32,12 @@ class AFP_ECA:
         :param bytes data: Record data
         """
         pass
-        # self.CATName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
+        # self.CATName, self.Triplets = unpack(f">8s{len(self.Triplets)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">8s{self.Triplets.len()}s", self.CATName, self.Triplets)
+        data = pack(f">8s{len(self.Triplets)}s", self.CATName, self.Triplets)
         return data

@@ -30,12 +30,12 @@ class AFP_NOP:
         :param bytes data: Record data
         """
         pass
-        # self.UndfData = unpack(f">{self.UndfData.len()}s", data)
+        # self.UndfData = unpack(f">{len(self.UndfData)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">{self.UndfData.len()}s", self.UndfData)
+        data = pack(f">{len(self.UndfData)}s", self.UndfData)
         return data

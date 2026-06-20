@@ -28,13 +28,13 @@ class AFP_BDA:
 
         :param bytes data: Record data
         """
-        pass
-        # self.BCOCAdat = unpack(f">{self.BCOCAdat.len()}s", data)
+        self.segment.objects.add_barcode_data(data)
+        # self.BCOCAdat = unpack(f">{len(self.BCOCAdat)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">{self.BCOCAdat.len()}s", self.BCOCAdat)
+        data = pack(f">{len(self.BCOCAdat)}s", self.BCOCAdat)
         return data

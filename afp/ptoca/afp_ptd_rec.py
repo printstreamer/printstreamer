@@ -30,12 +30,12 @@ class AFP_PTD:
         :param bytes data: Record data
         """
         pass
-        # self.PTOCAdes = unpack(f">{self.PTOCAdes.len()}s", data)
+        # self.PTOCAdes = unpack(f">{len(self.PTOCAdes)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">{self.PTOCAdes.len()}s", self.PTOCAdes)
+        data = pack(f">{len(self.PTOCAdes)}s", self.PTOCAdes)
         return data

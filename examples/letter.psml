@@ -1,0 +1,67 @@
+<document units="points">
+
+  <master-page name="main" page-width="612" page-height="792"
+               margin-top="54" margin-bottom="54" margin-left="72" margin-right="72"
+               columns="2" column-gap="18" header-extent="36" footer-extent="24">
+    <header>
+      <paragraph font="serif" size="9" color="#666666" text-align="left">
+        PrintStreamer — Composed Document
+      </paragraph>
+    </header>
+    <footer>
+      <paragraph font="sans" size="9" color="#666666" text-align="center">
+        Page <page-number/> of <page-count/>
+      </paragraph>
+    </footer>
+  </master-page>
+
+  <style name="title" font="sans" size="20" weight="bold" color="#1a3c6e"
+         space-after="10" text-align="left"/>
+  <style name="h2" font="sans" size="13" weight="bold" color="#1a3c6e"
+         space-before="8" space-after="4" keep-together="true"/>
+  <style name="body" font="serif" size="10.5" line-height="14" text-align="justify"
+         space-after="6" widows="2" orphans="2" first-line-indent="14"/>
+
+  <page-sequence master="main" name="GUIDE001">
+    <bookmark name="top" title="Composition Guide"/>
+    <flow>
+      <paragraph style="title">A Custom Markup for Print Composition</paragraph>
+
+      <paragraph style="h2">Automatic Flow</paragraph>
+      <paragraph style="body">PSML is a custom XML vocabulary inspired by XSL-FO. Text
+        placed in a <span weight="bold">flow</span> wraps within the column, breaks across
+        columns, and paginates automatically. Measurements are expressed in printer points
+        so the composed output matches the print stream exactly. The engine computes the
+        precise width of every run from the font metrics, which is what lets later passes
+        extract text by window coordinates.</paragraph>
+      <paragraph style="body">Headers and footers are drawn from the page master on every
+        generated page, and fields such as <span style="h2">page numbers</span> are resolved
+        during layout. Widow and orphan controls keep paragraphs from breaking awkwardly
+        across columns and pages, and keep-together holds a block intact when it fits.</paragraph>
+
+      <paragraph style="h2">Graphics and Barcodes</paragraph>
+      <paragraph style="body">Beyond text, PSML positions images, rules, rectangles,
+        ellipses, polygons, paths, and barcodes. Colour may be given as hex, rgb, cmyk, or a
+        named colour. The same model renders to PDF or AFP without changing the markup.</paragraph>
+
+      <line x1="72" y1="540" x2="270" y2="540" width="1" color="#1a3c6e"/>
+      <rectangle x="72" y="552" width="120" height="48" color="#1a3c6e" fill="#eef3fb"/>
+      <barcode x="210" y="552" width="160" height="48" symbology="code128" data="PSML-2026"/>
+
+      <paragraph style="body">This final paragraph contains enough words to demonstrate the
+        flow filling the first column, continuing into the second column, and then spilling
+        onto a second page so that pagination, headers, footers, and the page-of-count field
+        can all be verified in one render. Lorem ipsum dolor sit amet, consectetur adipiscing
+        elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
+        minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+        consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
+        dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt
+        in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde
+        omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem
+        aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae
+        dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit
+        aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi
+        nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet.</paragraph>
+    </flow>
+  </page-sequence>
+</document>

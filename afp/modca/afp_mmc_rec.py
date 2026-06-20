@@ -33,12 +33,12 @@ class AFP_MMC:
         :param bytes data: Record data
         """
         pass
-        # self.MMCid, self.Constant, self.Keywords = unpack(f">1s1s{self.Keywords.len()}s", data)
+        # self.MMCid, self.Constant, self.Keywords = unpack(f">1s1s{len(self.Keywords)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">1s1s{self.Keywords.len()}s", self.MMCid, self.Constant, self.Keywords)
+        data = pack(f">1s1s{len(self.Keywords)}s", self.MMCid, self.Constant, self.Keywords)
         return data

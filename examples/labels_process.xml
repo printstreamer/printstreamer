@@ -1,0 +1,13 @@
+<!-- Generate Avery 5160 label sheets from an index file. Each index record fills one
+     label; {field} placeholders are substituted from the record's fields. -->
+<process>
+    <step name="labels" stock="avery-5160" index="recipients.idx" index_format="json">
+        <label><![CDATA[
+            <paragraph font="sans" size="10" weight="bold">{name}</paragraph>
+            <paragraph font="sans" size="8">{address}</paragraph>
+            <paragraph font="sans" size="8">{city}</paragraph>
+            <barcode x="4" y="44" width="120" height="18" symbology="code128" data="{zip}"/>
+        ]]></label>
+        <file name="labels.pdf" file_type="pdf" type="output"/>
+    </step>
+</process>

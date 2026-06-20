@@ -29,12 +29,12 @@ class AFP_OCD:
         :param bytes data: Record data
         """
         pass
-        # self.ObjCdat = unpack(f">{self.ObjCdat.len()}s", data)
+        # self.ObjCdat = unpack(f">{len(self.ObjCdat)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">{self.ObjCdat.len()}s", self.ObjCdat)
+        data = pack(f">{len(self.ObjCdat)}s", self.ObjCdat)
         return data

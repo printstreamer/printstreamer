@@ -1,1 +1,98 @@
-## Document Stream Utilities: Compose, Analyze, Extract, Enhance, Transform
+# PrintStreamer
+
+A universal print-stream engine. It parses AFP, PDF, PostScript, PCL, and Xerox
+Metacode down to the element level, stores everything in one normalized in-memory
+model, and lets you analyze, extract, identify, edit, transform, impose, and compose
+print streams — driven by simple XML process files.
+
+```
+ readers                normalized model                writers
+ ┌───────────┐        ┌────────────────────┐         ┌───────────┐
+ │ afp  pdf  │        │ StreamDocumentSet   │         │ afp  pdf  │
+ │ ps   pcl  │ ─────▶ │  Document ▸ Page ▸  │ ──────▶ │ ps   pcl  │
+ │ metacode  │        │  Element ▸ Resource │         │ metacode  │
+ └───────────┘        └────────────────────┘         └───────────┘
+        ▲                    │        ▲                     │
+   PSML markup ──────────────┘        └── spec.xml ─────────┘
+   (compose)                              (identify / extract / enhance)
+```
+
+Everything operates on the model; parsers and writers are the only format-aware code.
+Add a format by writing a reader + writer pair — no feature code changes.
+
+## Quick start
+
+```bash
+pip install -r requirements.txt          # pillow, pymupdf, reportlab
+pip install pytest                        # for the test suite
+python stream.py examples/transform_process.xml
+python -m pytest
+```
+
+A process is an XML file of steps; run it with `python stream.py <process.xml>`:
+
+```xml
+<process>
+  <step name="transform">
+    <file name="in.afp" file_type="afp" type="input"/>
+    <file name="out.pdf" file_type="pdf" type="output"/>
+  </step>
+</process>
+```
+
+## Documentation
+
+| Document | Contents |
+|---|---|
+| [docs/architecture.md](docs/architecture.md) | Component map and data flow |
+| [docs/process-utility.md](docs/process-utility.md) | `stream.py`, process-file structure, global options |
+| [docs/processes.md](docs/processes.md) | Every process and all its options, with examples |
+| [docs/model.md](docs/model.md) | The normalized memory model (documents, pages, elements, resources) |
+| [docs/printstreams.md](docs/printstreams.md) | Supported formats and per-format feature matrix |
+| [docs/spec.md](docs/spec.md) | `spec.xml`: identification, extraction fields, enhancements |
+| [docs/markup.md](docs/markup.md) | PSML composition (overview; full grammar in [markup/SCHEMA.md](markup/SCHEMA.md)) |
+| [docs/barcodes.md](docs/barcodes.md) | Supported barcode symbologies and OMR |
+
+## Examples
+
+Runnable process/spec/markup files are in [examples/](examples):
+
+| File | Shows |
+|---|---|
+| [transform_process.xml](examples/transform_process.xml) | Format → format conversion |
+| [analyze_process.xml](examples/analyze_process.xml) | Stats + model dump, with parse scope/level/threads |
+| [index_merge_process.xml](examples/index_merge_process.xml) | Extract → index → merge, spec-driven |
+| [statement_spec.xml](examples/statement_spec.xml) | A full spec: identify, fields, enhancements |
+| [nup_process.xml](examples/nup_process.xml) | N-up imposition with page rotation |
+| [booklet_process.xml](examples/booklet_process.xml) + [booklet_spec.xml](examples/booklet_spec.xml) | Fully spec-driven step; per-cell imposition with `n`/`n-1` page refs |
+| [edit_process.xml](examples/edit_process.xml) | Inline extract/delete/modify/add |
+| [labels_process.xml](examples/labels_process.xml) | Index-driven label sheets |
+| [compose_process.xml](examples/compose_process.xml) | Generate a stream + indexes from PSML |
+| [letter.psml](examples/letter.psml) | PSML markup document |
+
+## At a glance
+
+- **Processes:** `transform`, `analyze`, `extract`, `merge`, `split`, `reorder`,
+  `nup`, `edit`, `compose`, `labels`.
+- **Readers:** AFP (text, fonts, IOCA images, GOCA/BCOCA objects, overlays, page
+  segments, placement), PDF, PostScript, PCL, Metacode.
+- **Writers:** PDF, AFP, PostScript, PCL, Metacode.
+- **Selection:** by text, by hex id, or by window `(x, y, width, height)`.
+- **Barcodes:** Code 39 (3of9), Code 128 (incl. 128C), Code 93, QR, DataMatrix,
+  USPS 4-State, and OMR marks.
+- **Cost controls:** page ranges, parse levels, record/resource filters, multi-threaded
+  AFP parsing.
+- **Compression:** 0–10 index-file compression, plus PDF internal (content-stream)
+  compression via `internal-compress` (custom AFP internal compression is on the
+  roadmap).
+
+## Development
+
+```bash
+python -m pytest          # 63 tests
+python -m compileall .     # warning-free
+```
+
+To add a print-stream format: implement a reader segment (build the model) and a
+writer (`write(document_set, path)`), then register them in
+[stream_file.py](stream_file.py) and [writer/registry.py](writer/registry.py).

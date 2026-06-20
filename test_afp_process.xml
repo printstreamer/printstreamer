@@ -1,15 +1,25 @@
 <process>
+    <!-- Transform AFP to PDF. -->
     <step name="transform">
         <file name="test_afp.afp" file_type="afp" type="input"/>
         <file name="test_afp.pdf" file_type="pdf" type="output"/>
     </step>
-    <step name="analyze">
+
+    <!-- Parse and report stats; dump the model to JSON. -->
+    <step name="analyze" dump="test_afp_model.json">
         <file name="test_afp.afp" file_type="afp" type="input"/>
     </step>
-    <step name="extract">
+
+    <!-- Extract an index file (json) with a windowed field and a barcode probe. -->
+    <step name="extract" index="test_afp.idx" index_format="json"
+          compress="none" compress_level="0">
         <file name="test_afp.afp" file_type="afp" type="input"/>
+        <field name="heading" window="0,0,612,72"/>
+        <field name="has_barcode" hex="d3eeeb"/>
     </step>
-    <step name="merge">
-        <file name="test_afp.afp" file_type="afp" type="input"/>
+
+    <!-- Merge: build a PDF from the index (content/order driven by the index records). -->
+    <step name="merge" index="test_afp.idx" index_format="json">
+        <file name="test_afp_merged.pdf" file_type="pdf" type="output"/>
     </step>
 </process>

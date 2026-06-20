@@ -1,0 +1,14 @@
+<!-- Edit a print stream in place: delete by hex/text/window, modify, and add
+     elements. Operations may be inline (below) and/or supplied by a spec=. -->
+<process>
+    <step name="edit" extract_to="captured.json">
+        <file name="test_afp.afp" file_type="afp" type="input"/>
+        <file name="edited.pdf" file_type="pdf" type="output"/>
+
+        <extract kind="text" window="0,0,612,72" field="heading"/>
+        <delete kind="image"/>
+        <modify text="Lesson" set-color="#0000ff" set-size="13"/>
+        <add kind="barcode" symbology="3of9" x="430" y="40" width="150" height="36" data="DOC-0001"/>
+        <add kind="line" x1="72" y1="96" x2="540" y2="96" weight="1" color="#000000"/>
+    </step>
+</process>

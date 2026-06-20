@@ -31,12 +31,12 @@ class AFP_BMO:
         :param bytes data: Record data
         """
         pass
-        # self.OvlyName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
+        # self.OvlyName, self.Triplets = unpack(f">8s{len(self.Triplets)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">8s{self.Triplets.len()}s", self.OvlyName, self.Triplets)
+        data = pack(f">8s{len(self.Triplets)}s", self.OvlyName, self.Triplets)
         return data

@@ -2,7 +2,7 @@
 
 from struct import pack, unpack
 
-from afp_class import AFPClass
+from afp.modca.afp_class import AFPClass
 from stream_field_afp import StreamFieldAFP
 
 

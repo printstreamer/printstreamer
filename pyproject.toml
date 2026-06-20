@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "printstreamer"
+version = "0.1.0"
+description = "Universal print-stream engine: parse, analyze, edit, transform, impose, and generate AFP, PDF, Metacode, PCL, and PostScript."
+readme = "README.md"
+requires-python = ">=3.13"
+license = { file = "LICENSE" }
+dependencies = [
+    "pillow",
+    "pymupdf",
+    "reportlab",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+printstreamer = "stream:main"
+
+[tool.setuptools]
+# Flat-layout modules plus the afp record-class package.
+py-modules = [
+    "stream", "stream_parser", "stream_file",
+    "stream_segment_afp", "stream_segment_pdf",
+    "stream_page_afp", "stream_page_pdf",
+    "stream_record_afp", "stream_afp", "stream_pdf",
+    "stream_field_afp", "stream_function_afp", "units",
+]
+
+[tool.setuptools.packages.find]
+include = ["afp*", "model*", "writer*", "process*", "labels*", "markup*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

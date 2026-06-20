@@ -31,12 +31,12 @@ class AFP_EDT:
         :param bytes data: Record data
         """
         pass
-        # self.DocName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
+        # self.DocName, self.Triplets = unpack(f">8s{len(self.Triplets)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">8s{self.Triplets.len()}s", self.DocName, self.Triplets)
+        data = pack(f">8s{len(self.Triplets)}s", self.DocName, self.Triplets)
         return data

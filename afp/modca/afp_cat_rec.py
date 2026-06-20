@@ -29,12 +29,12 @@ class AFP_CAT:
         :param bytes data: Record data
         """
         pass
-        # self.CATData = unpack(f">{self.CATData.len()}s", data)
+        # self.CATData = unpack(f">{len(self.CATData)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">{self.CATData.len()}s", self.CATData)
+        data = pack(f">{len(self.CATData)}s", self.CATData)
         return data

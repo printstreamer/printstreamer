@@ -39,13 +39,13 @@ class AFP_IPS:
 
         :param bytes data: Record data
         """
-        pass
-        # self.PsegName, self.XpsOset, self.YpsOset, self.Triplets = unpack(f">8sxhxh{self.Triplets.len()}s", data)
+        self.segment.objects.include_page_segment(data)
+        # self.PsegName, self.XpsOset, self.YpsOset, self.Triplets = unpack(f">8sxhxh{len(self.Triplets)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">8sxhxh{self.Triplets.len()}s", self.PsegName, self.XpsOset, self.YpsOset, self.Triplets)
+        data = pack(f">8sxhxh{len(self.Triplets)}s", self.PsegName, self.XpsOset, self.YpsOset, self.Triplets)
         return data

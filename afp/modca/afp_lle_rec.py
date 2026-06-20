@@ -53,12 +53,12 @@ class AFP_LLE:
         :param bytes data: Record data
         """
         pass
-        # self.LnkType, self.Reserved_1, self.RGLength, self.RGFunct, self.Triplets = unpack(f">1s1sH1s{self.Triplets.len()}s", data)
+        # self.LnkType, self.Reserved_1, self.RGLength, self.RGFunct, self.Triplets = unpack(f">1s1sH1s{len(self.Triplets)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">1s1sH1s{self.Triplets.len()}s", self.LnkType, self.Reserved_1, self.RGLength, self.RGFunct, self.Triplets)
+        data = pack(f">1s1sH1s{len(self.Triplets)}s", self.LnkType, self.Reserved_1, self.RGLength, self.RGFunct, self.Triplets)
         return data

@@ -31,13 +31,13 @@ class AFP_BGR:
 
         :param bytes data: Record data
         """
-        pass
-        # self.GdoName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
+        self.segment.objects.begin_object("graphic", None, "BGR")
+        # self.GdoName, self.Triplets = unpack(f">8s{len(self.Triplets)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">8s{self.Triplets.len()}s", self.GdoName, self.Triplets)
+        data = pack(f">8s{len(self.Triplets)}s", self.GdoName, self.Triplets)
         return data

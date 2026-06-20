@@ -30,13 +30,13 @@ class AFP_EIM:
 
         :param bytes data: Record data
         """
-        pass
-        # self.IdoName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
+        self.segment.objects.end_object()
+        # self.IdoName, self.Triplets = unpack(f">8s{len(self.Triplets)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">8s{self.Triplets.len()}s", self.IdoName, self.Triplets)
+        data = pack(f">8s{len(self.Triplets)}s", self.IdoName, self.Triplets)
         return data

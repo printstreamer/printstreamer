@@ -37,12 +37,12 @@ class AFP_IPG:
         :param bytes data: Record data
         """
         pass
-        # self.PgName, self.Reserved_1, self.IPgFlgs, self.Triplets = unpack(f">8s8s1s{self.Triplets.len()}s", data)
+        # self.PgName, self.Reserved_1, self.IPgFlgs, self.Triplets = unpack(f">8s8s1s{len(self.Triplets)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">8s8s1s{self.Triplets.len()}s", self.PgName, self.Reserved_1, self.IPgFlgs, self.Triplets)
+        data = pack(f">8s8s1s{len(self.Triplets)}s", self.PgName, self.Reserved_1, self.IPgFlgs, self.Triplets)
         return data

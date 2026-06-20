@@ -1,103 +1,148 @@
-""" AFP PTX Record """
+""" AFP PTX Record (Presentation Text) -> model elements.
 
-from struct import pack, unpack
+Walks the PTOCA control-sequence stream of a PTX record and emits TextElements (and
+rule LineElements) into the current model page. Inline/baseline positions are tracked
+in AFP L-units and converted to points using the page resolution captured from the
+Page Descriptor (PGD); see units.afp_to_points.
+"""
 
-import stream_afp
-from afp_ptx_amb_seq import AFP_PTX_AMB
-from afp_ptx_ami_seq import AFP_PTX_AMI
-from afp_ptx_bln_seq import AFP_PTX_BLN
-from afp_ptx_bsu_seq import AFP_PTX_BSU
-from afp_ptx_dbr_seq import AFP_PTX_DBR
-from afp_ptx_dir_seq import AFP_PTX_DIR
-from afp_ptx_esu_seq import AFP_PTX_ESU
-from afp_ptx_nop_seq import AFP_PTX_NOP
-from afp_ptx_ovs_seq import AFP_PTX_OVS
-from afp_ptx_rmb_seq import AFP_PTX_RMB
-from afp_ptx_rmi_seq import AFP_PTX_RMI
-from afp_ptx_rps_seq import AFP_PTX_RPS
-from afp_ptx_sbi_seq import AFP_PTX_SBI
-from afp_ptx_sec_seq import AFP_PTX_SEC
-from afp_ptx_sia_seq import AFP_PTX_SIA
-from afp_ptx_sim_seq import AFP_PTX_SIM
-from afp_ptx_stc_seq import AFP_PTX_STC
-from afp_ptx_sto_seq import AFP_PTX_STO
-from afp_ptx_svi_seq import AFP_PTX_SVI
-from afp_ptx_tbm_seq import AFP_PTX_TBM
-from afp_ptx_trn_seq import AFP_PTX_TRN
-from afp_ptx_usc_seq import AFP_PTX_USC
-from stream_field_afp import StreamFieldAFP
+import logging
+
+import fontmetrics
+from afp.ptoca.afp_ptx_trn_seq import AFP_PTX_TRN
+from afp.ptoca.afp_ptx_ami_seq import AFP_PTX_AMI
+from afp.ptoca.afp_ptx_amb_seq import AFP_PTX_AMB
+from afp.ptoca.afp_ptx_rmi_seq import AFP_PTX_RMI
+from afp.ptoca.afp_ptx_rmb_seq import AFP_PTX_RMB
 from stream_function_afp import StreamFunctionAFP
+from model.element import LineElement, SourceRef, TextElement
+from model.geometry import Color, Point, Rect
+from units import POINTS_PER_INCH
 
+logger = logging.getLogger(__name__)
 
-afp_ptx_fields_list = [
-    StreamFieldAFP(name="PTOCAdat", offset=0, length=32761, type="UNDF", optional=True, exception='\x00', range_values=['', '', ''], meaning=['Up to 32,759 bytes of', 'PTOCA-defined data', '']),
-    ]
-afp_ptx_fields = {}
-for field in afp_ptx_fields_list:
-    afp_ptx_fields[field.name] = field
+# Nominal text height (points) used for bbox estimation until font metrics are wired.
+_DEFAULT_TEXT_SIZE = 10.0
 
 
 class AFP_PTX:
+    """ Presentation Text record: a stream of PTOCA control sequences. """
 
     def __init__(self, segment):
         self.segment = segment
         self.document = self.segment.cur_document
         self.page = self.segment.cur_page
-        self.cur_x = None
-        self.cur_y = None
-                                        # Offset: Length: Type: Optional: Exception: Range:                Meaning:
-        self.PTOCAdat = None            #      0   32761  UNDF  y         X'00'                            Up to 32,759 bytes of
-                                        #                                                                  PTOCA-defined data
+        # Position state, in AFP L-units relative to the page/text-object origin.
+        self.cur_x = 0
+        self.cur_y = 0
+        self.active_font = None
+        self.active_color = None
+
+    # -- helpers ----------------------------------------------------------
+
+    def _res(self):
+        attrs = self.page.attributes if self.page else {}
+        return attrs.get("res_x", 1440.0), attrs.get("res_y", 1440.0)
+
+    def _pt(self, lunits, axis="x"):
+        res_x, res_y = self._res()
+        res = res_x if axis == "x" else res_y
+        return lunits / res * POINTS_PER_INCH
+
+    def _source_ref(self):
+        return SourceRef(file_format="afp", record_type="PTX",
+                         record_number=self.segment.cur_rec_number,
+                         byte_offset=self.segment.cur_rec_offset,
+                         length=self.segment.cur_rec_length)
+
+    # -- parse ------------------------------------------------------------
 
     def parse(self, data):
-        """ Parse the data from a record into the record class fields.
-
-        :param data data: Record data
-        """
+        """ Parse PTOCA control sequences into model elements. """
+        if self.page is None:
+            return
+        import stream_afp        # lazy: avoids a stream_afp <-> record-module import cycle
         start = 0
         length = len(data)
         while start < length:
             cur_function = StreamFunctionAFP()
-            value = ""
             if data[start:start + 1] == b"\x2B":
+                # PTOCA introducer escape (0x2B 0xD3) for the unchained form.
                 cur_function.length = 2
                 cur_function.type = "ESC"
-            else:
-                # cur_function.length = struct.unpack(">h", self.data[start:start + 1])
-                # cur_function.length = int(self.data[start:start + 1], 2)
-                cur_function.length = ord(data[start:start + 1])
-                cur_function.type = stream_afp.afp_ptx_by_value[data[start + 1:start + 2]]["type"]
-                seq_data = data[start + 2:start + 2 + cur_function.length - 2]
-                if (cur_function.type == "TRN") or (cur_function.type == "TRN-C"):
-                    seq = AFP_PTX_TRN(self.segment)
-                    seq.parse(seq_data)
-                    self.page.text.append({'text': seq.TRNDATA, 'font_name': None, 'font_typeface': None,
-                            'font_size': None, 'color': None, 'color_rgb': None, 'x': self.cur_x, 'y': self.cur_y,
-                            'bbox': (self.cur_x, self.cur_y, None, None)})
-                    print(seq)
-                elif (cur_function.type == "AMI") or (cur_function.type == "AMI-C"):
-                    seq = AFP_PTX_AMI(self.segment)
-                    seq.parse(seq_data)
-                    self.cur_x = seq.DSPLCMNT[0] / 10  # 72  # 1440
-                elif (cur_function.type == "AMB") or (cur_function.type == "AMB-C"):
-                    seq = AFP_PTX_AMB(self.segment)
-                    seq.parse(seq_data)
-                    self.cur_y = seq.DSPLCMNT[0] / 10  # 72  # 1440
-                elif (cur_function.type == "RMI") or (cur_function.type == "RMI-C"):
-                    seq = AFP_PTX_RMI(self.segment)
-                    seq.parse(seq_data)
-                    self.cur_x += seq.INCRMENT[0] / 10  # 72  # 1440
-                elif (cur_function.type == "RMB") or (cur_function.type == "RMB-C"):
-                    seq = AFP_PTX_RMB(self.segment)
-                    seq.parse(seq_data)
-                    self.cur_y += seq.INCRMENT[0] / 10  # 72  # 1440
-            print(f"  PTX function:  type={cur_function.type} start={start} length={cur_function.length} data=()")
-            start += cur_function.length
+                start += cur_function.length
+                continue
+            cur_function.length = data[start]
+            func = stream_afp.afp_ptx_by_value.get(data[start + 1:start + 2])
+            if func is None:
+                start += max(cur_function.length, 1)
+                continue
+            cur_function.type = func["type"]
+            seq_data = data[start + 2:start + cur_function.length]
+            self._handle(cur_function.type, seq_data)
+            start += max(cur_function.length, 1)
 
-    def format(self):
-        """ Format the data from the record class fields into a record.
+    def _handle(self, ftype, seq_data):
+        base = ftype.split("-")[0]       # strip the "-C" chained suffix
+        if base == "TRN":
+            self._emit_text(seq_data)
+        elif base == "AMI":
+            seq = AFP_PTX_AMI(self.segment); seq.parse(seq_data)
+            self.cur_x = seq.DSPLCMNT[0]
+        elif base == "AMB":
+            seq = AFP_PTX_AMB(self.segment); seq.parse(seq_data)
+            self.cur_y = seq.DSPLCMNT[0]
+        elif base == "RMI":
+            seq = AFP_PTX_RMI(self.segment); seq.parse(seq_data)
+            self.cur_x += seq.INCRMENT[0]
+        elif base == "RMB":
+            seq = AFP_PTX_RMB(self.segment); seq.parse(seq_data)
+            self.cur_y += seq.INCRMENT[0]
+        elif base == "SCF":
+            # Set Coded Font Local: 1-byte local font id.
+            if seq_data:
+                self.active_font = f"F{seq_data[0]:02X}"
+        elif base in ("DBR", "DIR"):
+            self._emit_rule(base, seq_data)
+        # Other sequences (SIM/SIA/STO/SVI/STC/SEC/...) adjust state we do not yet
+        # render; they are intentionally skipped but never abort the stream.
 
-        :returns: Record data
-        """
-        data = pack(f">{self.PTOCAdat.len()}s", self.PTOCAdat)
-        return data
+    def _emit_text(self, seq_data):
+        font = self.segment.objects.font(self.active_font) if self.active_font else None
+        text = font.decode(seq_data) if font else seq_data.decode("latin-1", "replace")
+        size = (font.size if font and font.size else None) or _DEFAULT_TEXT_SIZE
+        # Precise run width from font metrics + the characters displayed (R11).
+        width = fontmetrics.text_width(text, size, font)
+        x_pt = self._pt(self.cur_x, "x")
+        y_pt = self._pt(self.cur_y, "y")
+        element = TextElement(
+            text=text,
+            position=Point(x_pt, y_pt),
+            font_ref=self.active_font,
+            font_size=size,
+            color=self.active_color,
+            raw_text_bytes=seq_data,
+            bbox=Rect(x_pt, y_pt - size, width, size),
+            source_ref=self._source_ref(),
+        )
+        self.page.add_element(element)
+        # Advance the inline cursor past the printed text using the true width.
+        self.cur_x += int(width / POINTS_PER_INCH * self._res()[0])
+
+    def _emit_rule(self, base, seq_data):
+        # DBR/DIR: Rule Length (2, signed) [+ Rule Width (2)]. DBR draws along the
+        # baseline (horizontal); DIR draws along the inline (vertical).
+        if len(seq_data) < 2:
+            return
+        rule_len = int.from_bytes(seq_data[0:2], "big", signed=True)
+        x_pt = self._pt(self.cur_x, "x")
+        y_pt = self._pt(self.cur_y, "y")
+        if base == "DBR":
+            end = Point(x_pt + self._pt(rule_len, "x"), y_pt)
+        else:
+            end = Point(x_pt, y_pt + self._pt(rule_len, "y"))
+        self.page.add_element(LineElement(
+            start=Point(x_pt, y_pt), end=end, weight=1.0,
+            bbox=Rect.from_corners(x_pt, y_pt, end.x, end.y),
+            source_ref=self._source_ref(),
+        ))

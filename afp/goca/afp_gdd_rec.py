@@ -29,12 +29,12 @@ class AFP_GDD:
         :param bytes data: Record data
         """
         pass
-        # self.GOCAdes = unpack(f">{self.GOCAdes.len()}s", data)
+        # self.GOCAdes = unpack(f">{len(self.GOCAdes)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">{self.GOCAdes.len()}s", self.GOCAdes)
+        data = pack(f">{len(self.GOCAdes)}s", self.GOCAdes)
         return data

@@ -31,12 +31,12 @@ class AFP_BNG:
         :param bytes data: Record data
         """
         pass
-        # self.PGrpName, self.Triplets = unpack(f">8s{self.Triplets.len()}s", data)
+        # self.PGrpName, self.Triplets = unpack(f">8s{len(self.Triplets)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">8s{self.Triplets.len()}s", self.PGrpName, self.Triplets)
+        data = pack(f">8s{len(self.Triplets)}s", self.PGrpName, self.Triplets)
         return data

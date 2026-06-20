@@ -1,0 +1,19 @@
+<!-- A complete imposition specification. The process file only references this spec;
+     all options live here. Saddle-stitch booklet: 4 source pages per landscape sheet,
+     placing the last page (n) and first page (1) side by side. Cells give total
+     control of page selection (n, n-1, ..., or absolute), rotation, scale, and
+     alignment. -->
+<spec process="nup">
+    <inputs>
+        <file name="test_afp.afp" type="afp"/>
+    </inputs>
+    <outputs>
+        <file name="booklet.pdf" type="pdf"/>
+    </outputs>
+
+    <imposition page-width="792" page-height="612" rows="1" cols="2"
+                group-size="4" margin-top="18" margin-left="18" h-gap="12">
+        <cell row="0" col="0" page="n"   rotate="0" valign="center"/>
+        <cell row="0" col="1" page="1"   rotate="0" valign="center"/>
+    </imposition>
+</spec>

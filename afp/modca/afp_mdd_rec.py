@@ -61,12 +61,12 @@ class AFP_MDD:
         :param bytes data: Record data
         """
         pass
-        # self.XmBase, self.YmBase, self.XmUnits, self.YmUnits, self.XmSize, self.YmSize, self.MDDFlgs, self.Triplets = unpack(f">1s1sHHxHxH1s{self.Triplets.len()}s", data)
+        # self.XmBase, self.YmBase, self.XmUnits, self.YmUnits, self.XmSize, self.YmSize, self.MDDFlgs, self.Triplets = unpack(f">1s1sHHxHxH1s{len(self.Triplets)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">1s1sHHxHxH1s{self.Triplets.len()}s", self.XmBase, self.YmBase, self.XmUnits, self.YmUnits, self.XmSize, self.YmSize, self.MDDFlgs, self.Triplets)
+        data = pack(f">1s1sHHxHxH1s{len(self.Triplets)}s", self.XmBase, self.YmBase, self.XmUnits, self.YmUnits, self.XmSize, self.YmSize, self.MDDFlgs, self.Triplets)
         return data

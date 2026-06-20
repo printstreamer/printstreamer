@@ -49,7 +49,7 @@ def parse_modca_doc():
 
             # Start record type:
             # BAG (X'D3A8C9') Syntax
-            p = re.compile('\s+([A-Z][A-Z][A-Z])\s\(.+\)\sSyntax')
+            p = re.compile(r'\s+([A-Z][A-Z][A-Z])\s\(.+\)\sSyntax')
             m = p.match(line)
             if m:
                 if rec_types > 0:
@@ -83,7 +83,7 @@ def parse_modca_doc():
                         field['optional'] = ""
                         field['exception'] = ""
                         # Parse offset.
-                        p = re.compile('\s?\s?\s?\s?([0-9]+)\-?([0-9]+|n)?')
+                        p = re.compile(r'\s?\s?\s?\s?([0-9]+)\-?([0-9]+|n)?')
                         m = p.match(offset_string)
                         if m:
                             field_def = True
@@ -118,7 +118,7 @@ def parse_modca_doc():
 
             # Start class section:
             #     Offset            Type       Name                Range              Meaning
-            p = re.compile('\|?\s*?Offset\s+Type\s+Name\s+Range\s+Meaning\s+M\/O\s+Exc')
+            p = re.compile(r'\|?\s*?Offset\s+Type\s+Name\s+Range\s+Meaning\s+M\/O\s+Exc')
             m = p.match(line)
             if m:
                 class_def = True
@@ -184,7 +184,7 @@ def parse_modca_doc():
                 unpack_parameter_list += ", "
             unpack_parameter_list += f"self.{name}"
             if ("triplets" in name.lower()) or (field["length"] > 32000):
-                field_format = '{self.%s.len()}s' % name
+                field_format = '{len(self.%s)}s' % name
             elif field["type"] in ["CHAR", "CODE", "BITS", "UNDF", "", None]:
                 field_format = f'{field["length"]}s'
             elif field["type"] == "SBIN":
@@ -355,7 +355,7 @@ def parse_ptoca_doc():
                         field['default'] = ""
                         field['indicator'] = ""
                         # Parse offset.
-                        p = re.compile('\s?\s?\s?\s?([0-9]+)\-?([0-9]+|n)?')
+                        p = re.compile(r'\s?\s?\s?\s?([0-9]+)\-?([0-9]+|n)?')
                         m = p.match(offset_string)
                         if m:
                             field_def = True
@@ -399,7 +399,7 @@ def parse_ptoca_doc():
 
             # Start class section:
             #     Offset            Type       Name                Range              Meaning
-            p = re.compile('\|?\s*?Offset\s+Type\s+Name\s+Range\s+Meaning\s+M\/O\s+Def\s+Ind')
+            p = re.compile(r'\|?\s*?Offset\s+Type\s+Name\s+Range\s+Meaning\s+M\/O\s+Def\s+Ind')
             m = p.match(line)
             if m:
                 class_def = True
@@ -469,7 +469,7 @@ def parse_ptoca_doc():
                 unpack_parameter_list += ", "
             unpack_parameter_list += f"self.{name}"
             if ("triplets" in name.lower()) or (field["length"] > 32000):
-                field_format = '{self.%s.len()}s' % name
+                field_format = '{len(self.%s)}s' % name
             elif field["type"] in ["CHAR", "CODE", "BITS", "UNDF", "", None]:
                 field_format = f'{field["length"]}s'
             elif field["type"] == "SBIN":
@@ -598,7 +598,7 @@ def parse_foca_doc():
 
             # Start record type:
             # BAG (X'D3A8C9') Syntax
-            p = re.compile('([A-Z][A-Z][A-Z]) - (D3[A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9]) - ')
+            p = re.compile(r'([A-Z][A-Z][A-Z]) - (D3[A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9]) - ')
             m = p.match(line)
             if m:
                 if rec_types > 0:
@@ -632,7 +632,7 @@ def parse_foca_doc():
                         field['optional'] = ""
                         field['exception'] = ""
                         # Parse offset.
-                        p = re.compile('\s?\s?\s?\s?([0-9]+)\-?([0-9]+|n)?')
+                        p = re.compile(r'\s?\s?\s?\s?([0-9]+)\-?([0-9]+|n)?')
                         m = p.match(offset_string)
                         if m:
                             field_def = True
@@ -667,7 +667,7 @@ def parse_foca_doc():
 
             # Start class section:
             #     Offset            Type       Name                Range              Meaning
-            p = re.compile('\|?\s*?Offset\s+Type\s+Name\s+Range\s+Meaning\s+M\/O')
+            p = re.compile(r'\|?\s*?Offset\s+Type\s+Name\s+Range\s+Meaning\s+M\/O')
             m = p.match(line)
             if m:
                 class_def = True
@@ -733,7 +733,7 @@ def parse_foca_doc():
                 unpack_parameter_list += ", "
             unpack_parameter_list += f"self.{name}"
             if ("triplets" in name.lower()) or (field["length"] > 32000):
-                field_format = '{self.%s.len()}s' % name
+                field_format = '{len(self.%s)}s' % name
             elif field["type"] in ["CHAR", "CODE", "BITS", "UNDF", "", None]:
                 field_format = f'{field["length"]}s'
             elif field["type"] == "SBIN":

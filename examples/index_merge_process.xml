@@ -1,0 +1,19 @@
+<!-- Two-pass workflow: extract an index (driven by a spec), then merge selected
+     documents/pages in index order into a PDF, enhancing each page from the spec. -->
+<process>
+    <!-- Pass 1: identify documents + extract fields -> page and document indexes.
+         Paths are relative to the directory you run stream.py from (the project root
+         here). -->
+    <step name="extract" spec="examples/statement_spec.xml"
+          index="statements.idx" index_format="json"
+          compress="gzip" compress_level="6">
+        <file name="test_afp.afp" file_type="afp" type="input"/>
+    </step>
+
+    <!-- Pass 2: rebuild output from the index, in record order, with spec
+         enhancements and {field} substitution; chunk every 500 pages. -->
+    <step name="merge" spec="examples/statement_spec.xml"
+          index="statements.idx.gz" index_format="json" chunk_pages="500">
+        <file name="statements.pdf" file_type="pdf" type="output"/>
+    </step>
+</process>

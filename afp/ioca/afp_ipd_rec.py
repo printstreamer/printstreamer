@@ -28,13 +28,13 @@ class AFP_IPD:
 
         :param bytes data: Record data
         """
-        pass
-        # self.IOCAdat = unpack(f">{self.IOCAdat.len()}s", data)
+        self.segment.objects.add_image_data(data, True)
+        # self.IOCAdat = unpack(f">{len(self.IOCAdat)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">{self.IOCAdat.len()}s", self.IOCAdat)
+        data = pack(f">{len(self.IOCAdat)}s", self.IOCAdat)
         return data

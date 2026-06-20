@@ -28,13 +28,13 @@ class AFP_IDD:
 
         :param bytes data: Record data
         """
-        pass
-        # self.IOCAdes = unpack(f">{self.IOCAdes.len()}s", data)
+        self.segment.objects.set_image_descriptor(data)
+        # self.IOCAdes = unpack(f">{len(self.IOCAdes)}s", data)
 
     def format(self):
         """ Format the data from the record class fields into a record.
 
         :returns: Record data
         """
-        data = pack(f">{self.IOCAdes.len()}s", self.IOCAdes)
+        data = pack(f">{len(self.IOCAdes)}s", self.IOCAdes)
         return data
